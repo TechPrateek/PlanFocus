@@ -168,6 +168,9 @@ export function generateSchedule(
           isCompleted: false,
           isMissed: item.isMissed && dayOffset === 0,
           priorityScore: item.priority,
+          pattern: item.topic.pattern,
+          problemUrl: item.topic.problemUrl,
+          needsRevision: item.topic.needsRevision,
         });
 
         dayHoursUsed += roundedDuration;

@@ -19,6 +19,7 @@ import { SubjectModal } from './components/SubjectModal';
 import { RebalanceBanner } from './components/RebalanceBanner';
 import { ConflictModal } from './components/ConflictModal';
 import { StudyTipModal } from './components/StudyTipModal';
+import { PlanlyRoadmapModal } from './components/PlanlyRoadmapModal';
 import { getTodayDateString } from './utils/dateUtils';
 import confetti from 'canvas-confetti';
 
@@ -43,6 +44,7 @@ export const App: React.FC = () => {
 
   // Modals & Active Selections
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
+  const [isPlanlyModalOpen, setIsPlanlyModalOpen] = useState<boolean>(false);
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState<boolean>(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [activeFocusTask, setActiveFocusTask] = useState<ScheduledTask | null>(null);
@@ -299,6 +301,25 @@ export const App: React.FC = () => {
     });
   };
 
+  const handleApplyPlanlyRoadmap = (newSubjects: Subject[], dailyHours: number) => {
+    const updatedSettings = {
+      ...state.settings,
+      dailyAvailableHours: dailyHours,
+    };
+    setState((prev) => ({
+      ...prev,
+      subjects: newSubjects,
+      settings: updatedSettings,
+    }));
+    refreshSchedule(newSubjects, updatedSettings, []);
+    confetti({
+      particleCount: 90,
+      spread: 80,
+      origin: { y: 0.6 },
+      colors: ['#6366f1', '#a855f7', '#10b981'],
+    });
+  };
+
   const handleUpdateDailyHours = (newHours: number) => {
     const updatedSettings = {
       ...state.settings,
@@ -345,6 +366,7 @@ export const App: React.FC = () => {
         }}
         onOpenWizard={() => setIsWizardOpen(true)}
         onLoadSample={handleLoadSampleData}
+        onOpenPlanlyModal={() => setIsPlanlyModalOpen(true)}
       />
 
       {/* Main Workspace Area */}
@@ -353,6 +375,7 @@ export const App: React.FC = () => {
           {/* Top Bar with Date, Greeting, Search & Demo Button */}
           <TopNav
             onLoadSample={handleLoadSampleData}
+            onOpenPlanlyModal={() => setIsPlanlyModalOpen(true)}
             isDarkMode={isDarkMode}
           />
 
@@ -554,6 +577,12 @@ export const App: React.FC = () => {
         onClose={() => setIsWizardOpen(false)}
         onComplete={handleWizardComplete}
         onLoadSample={handleLoadSampleData}
+      />
+
+      <PlanlyRoadmapModal
+        isOpen={isPlanlyModalOpen}
+        onClose={() => setIsPlanlyModalOpen(false)}
+        onApplyPlanlyRoadmap={handleApplyPlanlyRoadmap}
       />
 
       <SubjectModal

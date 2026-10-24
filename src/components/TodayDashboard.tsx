@@ -229,6 +229,23 @@ export const TodayDashboard: React.FC<TodayDashboardProps> = ({
                         >
                           {task.difficulty}
                         </span>
+
+                        {task.pattern && (
+                          <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60">
+                            ⚡ {task.pattern}
+                          </span>
+                        )}
+
+                        {task.problemUrl && (
+                          <a
+                            href={task.problemUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"
+                          >
+                            Solve on TUF ↗
+                          </a>
+                        )}
                       </div>
                     </div>
                   </div>

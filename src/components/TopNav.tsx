@@ -3,10 +3,11 @@ import { Search, Bell, Sparkles } from 'lucide-react';
 
 interface TopNavProps {
   onLoadSample: () => void;
+  onOpenPlanlyModal: () => void;
   isDarkMode: boolean;
 }
 
-export const TopNav: React.FC<TopNavProps> = ({ onLoadSample, isDarkMode }) => {
+export const TopNav: React.FC<TopNavProps> = ({ onLoadSample, onOpenPlanlyModal, isDarkMode }) => {
   const now = new Date();
   const dateFormatted = now.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -45,6 +46,16 @@ export const TopNav: React.FC<TopNavProps> = ({ onLoadSample, isDarkMode }) => {
             ⌘ K
           </kbd>
         </div>
+
+        {/* Planly TUF Roadmap button */}
+        <button
+          onClick={onOpenPlanlyModal}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm shadow-indigo-600/30 transition-all hover:scale-105"
+          title="Launch takeUforward Planly Roadmap generator"
+        >
+          <Sparkles className="w-3.5 h-3.5 fill-current" />
+          <span>Planly SDE</span>
+        </button>
 
         {/* Demo Data button for judges */}
         <button

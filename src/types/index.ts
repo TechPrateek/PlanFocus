@@ -8,6 +8,9 @@ export interface Topic {
   estimatedHours: number;
   completedHours: number;
   isCompleted: boolean;
+  pattern?: string;
+  problemUrl?: string;
+  needsRevision?: boolean;
 }
 
 export interface Subject {
@@ -32,6 +35,9 @@ export interface ScheduledTask {
   isCompleted: boolean;
   isMissed: boolean;
   priorityScore: number;
+  pattern?: string;
+  problemUrl?: string;
+  needsRevision?: boolean;
 }
 
 export interface DailySchedule {

@@ -22,6 +22,7 @@ interface SidebarProps {
   onOpenNewSubject: () => void;
   onOpenWizard: () => void;
   onLoadSample: () => void;
+  onOpenPlanlyModal: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -34,6 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenNewSubject,
   onOpenWizard,
   onLoadSample,
+  onOpenPlanlyModal,
 }) => {
   return (
     <aside
@@ -91,6 +93,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <LayoutDashboard className="w-4 h-4 text-indigo-500" />
                 <span>Dashboard</span>
               </div>
+            </button>
+
+            {/* Planly TUF Roadmap Generator Button */}
+            <button
+              onClick={onOpenPlanlyModal}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:border-indigo-500 transition-all group"
+            >
+              <div className="flex items-center gap-2.5">
+                <Sparkles className="w-4 h-4 text-indigo-500 group-hover:rotate-12 transition-transform" />
+                <span>Planly SDE Track</span>
+              </div>
+              <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-indigo-500 text-white font-bold">
+                TUF
+              </span>
             </button>
 
             <button
