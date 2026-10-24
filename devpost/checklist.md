@@ -39,7 +39,7 @@ Build mode: fast
   Learner check: Click "Simulate Missed Session", observe the notification banner, click "Rebalance Plan", and verify future days smoothly adjust.
   Commit: `Implement adaptive rebalance engine and capacity conflict warning`
 
-- [ ] **4. Interactive Web Audio Focus Timer (Pomodoro) & Analytics with Local Persistence**
+- [x] **4. Interactive Web Audio Focus Timer (Pomodoro) & Analytics with Local Persistence**
   Becomes usable: Full Pomodoro focus timer with 25m/5m/15m intervals, SVG circular progress, Web Audio synthesizer chimes (with graceful visual fallback), completed session logging to active topic, analytics progress bars, streak tracking, and automatic `localStorage` persistence surviving page refresh.
   Why now: Completes the full end-to-end loop (Setup → Schedule → Focus → Rebalance → Analytics → Persist), making the app 100% demo-ready for the hackathon.
   PRD ref: `prd.md > 4. Interactive Focus Timer (Pomodoro)`, `prd.md > 5. Progress Analytics & Streaks`, `prd.md > States and Boundaries`
