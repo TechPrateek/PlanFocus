@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusFlow AI — Product Requirements (PRD)</title>
+  <style>
+    :root {
+      --bg: #090a0f;
+      --card-bg: #12151e;
+      --card-border: #1e2230;
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.15);
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.6;
+      padding: 2.5rem 1rem;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    header {
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--accent-glow);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    h1 { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    .subtitle { font-size: 1.1rem; color: var(--text-muted); }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    h2 { font-size: 1.25rem; font-weight: 600; color: #fff; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .journey-flow {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .journey-node {
+      background: #171b26;
+      border: 1px solid var(--card-border);
+      padding: 1rem;
+      border-radius: 8px;
+      position: relative;
+    }
+    .journey-node.highlight {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.08);
+    }
+    .node-step {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+    .node-title { font-weight: 600; font-size: 0.95rem; color: #fff; margin-bottom: 0.25rem; }
+    .node-desc { font-size: 0.8rem; color: var(--text-muted); }
+    
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: #171b26;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 600;
+    }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+    
+    .criteria-list { list-style: none; margin-top: 0.75rem; }
+    .criteria-list li {
+      position: relative;
+      padding-left: 1.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: #d1d5db;
+    }
+    .criteria-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--success);
+      font-weight: bold;
+    }
+    .formula-box {
+      background: #0d0f17;
+      border-left: 3px solid var(--accent);
+      padding: 0.75rem 1rem;
+      font-family: monospace;
+      font-size: 0.9rem;
+      color: #a5b4fc;
+      margin: 0.75rem 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">Devpost Build With AI: Basics • PRD</span>
+      <h1>FocusFlow AI — Product Requirements</h1>
+      <p class="subtitle">Complete functional definition, algorithm specifications, edge cases, and acceptance criteria.</p>
+    </header>
+
+    <!-- The Core Journey -->
+    <div class="card">
+      <h2>The Core User Journey</h2>
+      <div class="journey-flow">
+        <div class="journey-node">
+          <span class="node-step">Step 1</span>
+          <div class="node-title">Setup / Demo</div>
+          <div class="node-desc">Enter subjects & hours or click 1-click Demo Data</div>
+        </div>
+        <div class="journey-node">
+          <span class="node-step">Step 2</span>
+          <div class="node-title">Smart Schedule</div>
+          <div class="node-desc">Priority engine allocates topics within daily hours</div>
+        </div>
+        <div class="journey-node highlight">
+          <span class="node-step">Step 3</span>
+          <div class="node-title">Focus Session</div>
+          <div class="node-desc">Pomodoro timer with Web Audio chimes</div>
+        </div>
+        <div class="journey-node highlight">
+          <span class="node-step">Step 4</span>
+          <div class="node-title">Adaptive Rebalance</div>
+          <div class="node-desc">1-click recalculation if sessions missed</div>
+        </div>
+        <div class="journey-node">
+          <span class="node-step">Step 5</span>
+          <div class="node-title">Analytics & Streak</div>
+          <div class="node-desc">Hours studied, topic mastery, and active streak</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature Specifications & Acceptance Criteria -->
+    <div class="card">
+      <h2>Feature Specifications & Acceptance Criteria</h2>
+      <div class="nav-tabs">
+        <button class="tab-btn active" onclick="showTab('sched')">1. Transparent Scheduler</button>
+        <button class="tab-btn" onclick="showTab('rebal')">2. Adaptive Rebalance</button>
+        <button class="tab-btn" onclick="showTab('timer')">3. Focus Pomodoro</button>
+        <button class="tab-btn" onclick="showTab('persist')">4. Persistence & Demo</button>
+      </div>
+
+      <div id="pane-sched" class="tab-pane active">
+        <p><strong>Deterministic Priority Scheduling Algorithm:</strong></p>
+        <div class="formula-box">Priority = (DifficultyWeight / (DaysUntilExam + 0.1)) * WorkloadHours</div>
+        <ul class="criteria-list">
+          <li>Never exceeds user's daily study hours budget (e.g. 3h/day).</li>
+          <li>Never schedules topics after their exam date has passed.</li>
+          <li>Accurately sorts topics by urgent exams and higher difficulty weights (Hard = 2x, Med = 1.5x, Easy = 1x).</li>
+          <li>Allows optional Gemini AI enhancement for study tips while maintaining 100% rule-based offline reliability.</li>
+        </ul>
+      </div>
+
+      <div id="pane-rebal" class="tab-pane">
+        <p><strong>Adaptive Rebalance & Capacity Conflict Warning:</strong></p>
+        <ul class="criteria-list">
+          <li>Marking a topic as "Missed" flags the deficit immediately without panic.</li>
+          <li>"Rebalance Plan" recalculates remaining topics across future available days without dropping content.</li>
+          <li>Capacity Warning triggers if remaining hours required > remaining days * daily hours limit.</li>
+          <li>Surfaces actionable guidance (e.g., "Consider adding +1.2 hours/day or reviewing high-priority topics first").</li>
+        </ul>
+      </div>
+
+      <div id="pane-timer" class="tab-pane">
+        <p><strong>Web Audio Focus Timer (Pomodoro):</strong></p>
+        <ul class="criteria-list">
+          <li>Work (25m), Short Break (5m), Long Break (15m) with custom adjustments.</li>
+          <li>Clean SVG circular progress countdown with monospace digits.</li>
+          <li>Synthesizes Web Audio chimes upon completion; gracefully falls back to browser notifications/visual pulses if sound blocked.</li>
+          <li>Logs completed intervals directly to active topic's study log.</li>
+        </ul>
+      </div>
+
+      <div id="pane-persist" class="tab-pane">
+        <p><strong>Persistence & Demo Simulation for Judges:</strong></p>
+        <ul class="criteria-list">
+          <li>100% localStorage persistence — refresh-proof, zero login required.</li>
+          <li>One-click "Load Sample Student Plan" populates realistic CS & Chemistry courses with upcoming exams.</li>
+          <li>One-click "Simulate Missed Session" demonstrates adaptive rebalance in 5 seconds during video demos.</li>
+          <li>Clean reset button to wipe data with confirmation dialog.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showTab(id) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('pane-' + id).classList.add('active');
+    }
+  </script>
+</body>
+</html>
