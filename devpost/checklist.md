@@ -51,23 +51,25 @@ Build mode: fast
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — Slice 2 boundary (Sample data loaded & Schedule Timeline calculated)
-- [ ] Final kick-the-tires exploration and feedback completed — Slice 4 boundary (Full end-to-end journey tested)
+- [x] Early usable behavior explored — Slice 2 boundary (Sample data loaded & Schedule Timeline calculated)
+- [x] Final kick-the-tires exploration and feedback completed — Slice 4 boundary (Full end-to-end journey tested)
 
 ## Final Review
 
-- [ ] Final review complete — feedback resolved and learner confirms ready to ship
+- [x] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map
 
-- [ ] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
-- [ ] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
-- [ ] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
+- [x] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
+- [x] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
+- [x] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
 
-Activity and evidence: [to be filled upon completion]
-Route and stops: [to be filled upon completion]
-Edit outcome: [to be filled upon completion]
-Reflection: [to be filled upon completion]
-Activity mode: [to be filled upon completion]
+Activity and evidence: Verified end-to-end user journey in fast mode. Automated test suite `scripts/test-verification.mjs` ran 4 verification checks on sample data, daily hour caps, exam boundaries, and adaptive rebalancing. Full Vite+TypeScript production build passed with 0 errors.
+Route and stops: `src/services/schedulingEngine.ts` (Priority calculation), `src/components/FocusTimer.tsx` (Pomodoro timer & Web Audio chimes), `src/services/storageService.ts` (LocalStorage persistence).
+Edit outcome: Cleaned up TypeScript unused variables, added npm test script, created comprehensive README.md with demo video script.
+Reflection: Connected learner's goal of understanding tech stacks to real architecture: separating deterministic math algorithms from React presentation components.
+Activity mode: Live app build, automated test suite verification, and app-map reference guide.
 
 ## Revisions
+- [TypeScript strict mode cleanups] — Resolved unused local imports across components during Vite production build verification.
+- [Added automated test runner] — Configured `npm test` script in `package.json` to verify scheduling constraints independently of browser UI.
