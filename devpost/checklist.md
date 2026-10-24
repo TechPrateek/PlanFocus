@@ -29,7 +29,7 @@ Build mode: fast
   Learner check: Switch to the Schedule Timeline tab, verify topics are distributed realistically across upcoming days without exceeding your daily study hour limit.
   Commit: `Add deterministic priority scheduling engine and timeline view`
 
-- [ ] **3. Adaptive Rebalance & Missed Session Recovery (The Unique Kernel)**
+- [x] **3. Adaptive Rebalance & Missed Session Recovery (The Unique Kernel)**
   Becomes usable: The core differentiator works live: marking a task as missed (or clicking "Simulate Missed Task") triggers the Rebalance banner. Clicking "Rebalance Plan" redistributes remaining topics forward without dropping tasks. If workload exceeds calendar days, the Capacity Conflict Warning appears with actionable remedies.
   Why now: Proves the unique kernel early rather than leaving it to the end.
   PRD ref: `prd.md > 3. Adaptive Rebalance & Missed Session Recovery`
