@@ -9,7 +9,7 @@ Build mode: fast
 
 ## Slices
 
-- [ ] **1. Scaffolding, Setup Wizard, and Sample Student Plan**
+- [x] **1. Scaffolding, Setup Wizard, and Sample Student Plan**
   Becomes usable: A running React + Vite + TypeScript web application styled with Tailwind CSS in an Obsidian dark theme. Shows the header, empty states, and lets the user open the Setup Wizard or click "Load Sample Student Plan" to instantly populate realistic courses, topics, and exam dates.
   Why now: Proves the whole path end to end on the first slice—scaffold, dependencies, types, UI shell, and state—giving every subsequent slice real data and a live screen to land on.
   PRD ref: `prd.md > 1. Setup Wizard & Demo Data Loader`, `prd.md > Screens and Layout`
@@ -19,7 +19,7 @@ Build mode: fast
   Learner check: Open the app in your browser, click "Load Sample Student Plan", and verify that Computer Science and Organic Chemistry appear on the screen with clean styling.
   Commit: `Initialize FocusFlow AI with setup wizard and sample student data`
 
-- [ ] **2. Transparent Priority Scheduling Engine & Calendar Timeline**
+- [x] **2. Transparent Priority Scheduling Engine & Calendar Timeline**
   Becomes usable: The app automatically calculates a mathematically sound daily study schedule leading up to exams, capping daily hours and ordering topics by exam proximity and difficulty. The "Study Schedule" view displays day-by-day blocks with capacity progress bars.
   Why now: The scheduling engine is the core calculation backbone that feeds daily tasks into the focus timer and drives adaptive replanning.
   PRD ref: `prd.md > 2. Transparent Scheduling Engine`
