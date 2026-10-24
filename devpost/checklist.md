@@ -71,5 +71,6 @@ Reflection: Connected learner's goal of understanding tech stacks to real archit
 Activity mode: Live app build, automated test suite verification, and app-map reference guide.
 
 ## Revisions
+- [Redesigned Dashboard Layout] — Refactored dashboard into 2-column productivity workspace with left sidebar, 4 top stat cards, dark focus timer widget, and time-blocked timeline based on student user feedback.
 - [TypeScript strict mode cleanups] — Resolved unused local imports across components during Vite production build verification.
 - [Added automated test runner] — Configured `npm test` script in `package.json` to verify scheduling constraints independently of browser UI.
