@@ -7,10 +7,12 @@ import {
   INITIAL_STATE,
 } from './services/storageService';
 import { generateSchedule, SchedulingResult } from './services/schedulingEngine';
-import { Header } from './components/Header';
+import { Sidebar } from './components/Sidebar';
+import { TopNav } from './components/TopNav';
 import { TodayDashboard } from './components/TodayDashboard';
+import { FocusSessionCard } from './components/FocusSessionCard';
+import { RightScheduleWidget } from './components/RightScheduleWidget';
 import { ScheduleTimeline } from './components/ScheduleTimeline';
-import { FocusTimer } from './components/FocusTimer';
 import { AnalyticsView } from './components/AnalyticsView';
 import { SetupWizard } from './components/SetupWizard';
 import { SubjectModal } from './components/SubjectModal';
@@ -22,7 +24,22 @@ import confetti from 'canvas-confetti';
 
 export const App: React.FC = () => {
   const [state, setState] = useState<AppState>(() => loadStoredState());
-  const [activeTab, setActiveTab] = useState<'today' | 'schedule' | 'timer' | 'analytics'>('today');
+  const [activeTab, setActiveTab] = useState<'today' | 'schedule' | 'tasks' | 'courses' | 'materials'>('today');
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    return localStorage.getItem('focusflow_theme') === 'dark';
+  });
+
+  // Sync theme class with HTML root
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isDarkMode) {
+      root.classList.add('dark');
+      localStorage.setItem('focusflow_theme', 'dark');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('focusflow_theme', 'light');
+    }
+  }, [isDarkMode]);
 
   // Modals & Active Selections
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
@@ -31,10 +48,6 @@ export const App: React.FC = () => {
   const [activeFocusTask, setActiveFocusTask] = useState<ScheduledTask | null>(null);
   const [studyTipTask, setStudyTipTask] = useState<ScheduledTask | null>(null);
   const [isStudyTipOpen, setIsStudyTipOpen] = useState<boolean>(false);
-
-  // Background timer status for Header pill
-  const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
-  const [timerMinutesRemaining, setTimerMinutesRemaining] = useState<number>(25);
 
   // Missed topics tracking
   const [missedTopicIds, setMissedTopicIds] = useState<string[]>([]);
@@ -74,6 +87,19 @@ export const App: React.FC = () => {
     saveStoredState(state);
   }, [state]);
 
+  // Auto-select first pending task for the focus card if none selected
+  useEffect(() => {
+    if (!activeFocusTask && state.schedule.length > 0) {
+      const todaySched = state.schedule.find((s) => s.dayLabel === 'Today');
+      if (todaySched && todaySched.tasks.length > 0) {
+        const firstPending = todaySched.tasks.find((t) => !t.isCompleted);
+        if (firstPending) {
+          setActiveFocusTask(firstPending);
+        }
+      }
+    }
+  }, [activeFocusTask, state.schedule]);
+
   // Handlers
   const handleLoadSampleData = () => {
     const sample = loadSampleState();
@@ -97,7 +123,6 @@ export const App: React.FC = () => {
       let targetTopicId = '';
       let targetSubjectId = '';
 
-      // Update schedule task
       const updatedSchedule = prev.schedule.map((day) => ({
         ...day,
         tasks: day.tasks.map((task) => {
@@ -110,7 +135,6 @@ export const App: React.FC = () => {
         }),
       }));
 
-      // Update subject topic
       const updatedSubjects = prev.subjects.map((subj) => {
         if (subj.id === targetSubjectId) {
           return {
@@ -141,7 +165,6 @@ export const App: React.FC = () => {
 
   const handleStartFocus = (task: ScheduledTask) => {
     setActiveFocusTask(task);
-    setActiveTab('timer');
   };
 
   const handleSimulateMissed = (task: ScheduledTask) => {
@@ -149,7 +172,6 @@ export const App: React.FC = () => {
       const updated = [...missedTopicIds, task.topicId];
       setMissedTopicIds(updated);
       setShowRebalanceBanner(true);
-      // Flag task as missed in schedule
       setState((prev) => ({
         ...prev,
         schedule: prev.schedule.map((day) => ({
@@ -162,7 +184,6 @@ export const App: React.FC = () => {
   };
 
   const handleRebalancePlan = () => {
-    // Re-run scheduler with missed topics prioritized for future slots
     refreshSchedule(state.subjects, state.settings, missedTopicIds);
     setShowRebalanceBanner(false);
     setMissedTopicIds([]);
@@ -183,7 +204,6 @@ export const App: React.FC = () => {
     const today = getTodayDateString();
 
     setState((prev) => {
-      // Add study log
       const newLog = {
         id: `log-${Date.now()}`,
         topicId: task.topicId,
@@ -194,7 +214,6 @@ export const App: React.FC = () => {
         durationMinutes,
       };
 
-      // Update topic completed hours
       const updatedSubjects = prev.subjects.map((subj) => {
         if (subj.id === task.subjectId) {
           return {
@@ -215,7 +234,6 @@ export const App: React.FC = () => {
         return subj;
       });
 
-      // Mark task complete in schedule
       const updatedSchedule = prev.schedule.map((day) => ({
         ...day,
         tasks: day.tasks.map((t) =>
@@ -223,7 +241,6 @@ export const App: React.FC = () => {
         ),
       }));
 
-      // Update streak if today is new active day
       const isNewDay = prev.lastActiveDate !== today;
       const newStreak = isNewDay ? prev.streak + 1 : prev.streak;
 
@@ -303,94 +320,233 @@ export const App: React.FC = () => {
   // Find today's tasks
   const todaySchedule = state.schedule.find((s) => s.dayLabel === 'Today');
   const todayTasks = todaySchedule ? todaySchedule.tasks : [];
-  const todayCompletedHours = todayTasks
-    .filter((t) => t.isCompleted)
-    .reduce((sum, t) => sum + t.durationHours, 0);
+
+  const allPendingTasks = state.subjects.flatMap((s) =>
+    s.topics.filter((t) => !t.isCompleted)
+  );
 
   return (
-    <div className="min-h-screen bg-[#090a0f] text-gray-100 flex flex-col font-sans">
-      <Header
+    <div
+      className={`min-h-screen flex font-sans antialiased transition-colors duration-200 ${
+        isDarkMode ? 'bg-[#090a0f] text-gray-100' : 'bg-[#f4f5f7] text-gray-900'
+      }`}
+    >
+      {/* Left Sidebar (Exact layout as screenshot!) */}
+      <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        streak={state.streak}
-        todayCompletedHours={todayCompletedHours}
-        dailyCapacityHours={state.settings.dailyAvailableHours}
-        soundEnabled={state.settings.soundEnabled}
-        onToggleSound={() =>
-          setState((prev) => ({
-            ...prev,
-            settings: { ...prev.settings, soundEnabled: !prev.settings.soundEnabled },
-          }))
-        }
-        onLoadSample={handleLoadSampleData}
+        pendingTasksCount={allPendingTasks.length}
+        coursesCount={state.subjects.length}
+        isDarkMode={isDarkMode}
+        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
         onOpenNewSubject={() => {
           setEditingSubject(null);
           setIsSubjectModalOpen(true);
         }}
         onOpenWizard={() => setIsWizardOpen(true)}
-        isTimerRunning={isTimerRunning}
-        timerMinutesRemaining={timerMinutesRemaining}
+        onLoadSample={handleLoadSampleData}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Adaptive Rebalance Notification Banner */}
-        {showRebalanceBanner && (
-          <div className="mb-6">
-            <RebalanceBanner
-              onRebalance={handleRebalancePlan}
-              onDismiss={() => setShowRebalanceBanner(false)}
-            />
-          </div>
-        )}
-
-        {/* Tab Views */}
-        {activeTab === 'today' && (
-          <TodayDashboard
-            tasks={todayTasks}
-            subjects={state.subjects}
-            dailyCapacity={state.settings.dailyAvailableHours}
-            onCompleteTask={handleCompleteTask}
-            onStartFocus={handleStartFocus}
-            onSimulateMissed={handleSimulateMissed}
-            onOpenStudyTip={(task) => {
-              setStudyTipTask(task);
-              setIsStudyTipOpen(true);
-            }}
-            onOpenWizard={() => setIsWizardOpen(true)}
+      {/* Main Workspace Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-5 sm:px-8 py-7">
+          {/* Top Bar with Date, Greeting, Search & Demo Button */}
+          <TopNav
             onLoadSample={handleLoadSampleData}
+            isDarkMode={isDarkMode}
           />
-        )}
 
-        {activeTab === 'schedule' && (
-          <ScheduleTimeline
-            schedule={state.schedule}
-            onCompleteTask={handleCompleteTask}
-            onStartFocus={handleStartFocus}
-          />
-        )}
+          {/* Adaptive Rebalance Notification Banner */}
+          {showRebalanceBanner && (
+            <div className="mb-6">
+              <RebalanceBanner
+                onRebalance={handleRebalancePlan}
+                onDismiss={() => setShowRebalanceBanner(false)}
+              />
+            </div>
+          )}
 
-        {activeTab === 'timer' && (
-          <FocusTimer
-            activeTask={activeFocusTask}
-            soundEnabled={state.settings.soundEnabled}
-            onToggleSound={() =>
-              setState((prev) => ({
-                ...prev,
-                settings: { ...prev.settings, soundEnabled: !prev.settings.soundEnabled },
-              }))
-            }
-            onLogCompletedSession={handleLogCompletedSession}
-            onTimerStateChange={(running, mins) => {
-              setIsTimerRunning(running);
-              setTimerMinutesRemaining(mins);
-            }}
-          />
-        )}
+          {/* Main 2-Column Dashboard View */}
+          {activeTab === 'today' && (
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-7">
+              {/* Left Column (65% width): Stat cards, Priority Tasks, Recent Docs */}
+              <div className="xl:col-span-8">
+                <TodayDashboard
+                  tasks={todayTasks}
+                  subjects={state.subjects}
+                  dailyCapacity={state.settings.dailyAvailableHours}
+                  streak={state.streak}
+                  onCompleteTask={handleCompleteTask}
+                  onStartFocus={handleStartFocus}
+                  onSimulateMissed={handleSimulateMissed}
+                  onOpenStudyTip={(task) => {
+                    setStudyTipTask(task);
+                    setIsStudyTipOpen(true);
+                  }}
+                  onOpenWizard={() => setIsWizardOpen(true)}
+                  onLoadSample={handleLoadSampleData}
+                  isDarkMode={isDarkMode}
+                />
+              </div>
 
-        {activeTab === 'analytics' && (
-          <AnalyticsView state={state} onResetData={handleResetAll} />
-        )}
-      </main>
+              {/* Right Rail (35% width): Dark Focus Session Card + Today's Schedule */}
+              <div className="xl:col-span-4 space-y-6">
+                <FocusSessionCard
+                  activeTask={activeFocusTask}
+                  soundEnabled={state.settings.soundEnabled}
+                  onLogCompletedSession={handleLogCompletedSession}
+                />
+
+                <RightScheduleWidget
+                  tasks={todayTasks}
+                  onStartFocus={handleStartFocus}
+                  isDarkMode={isDarkMode}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Schedule Timeline View */}
+          {activeTab === 'schedule' && (
+            <div className="bg-white dark:bg-[#12151e] p-6 rounded-3xl border border-gray-200/80 dark:border-[#1e2230] shadow-sm">
+              <ScheduleTimeline
+                schedule={state.schedule}
+                onCompleteTask={handleCompleteTask}
+                onStartFocus={handleStartFocus}
+              />
+            </div>
+          )}
+
+          {/* Assignments / Tasks Queue View */}
+          {activeTab === 'tasks' && (
+            <div className="bg-white dark:bg-[#12151e] p-6 rounded-3xl border border-gray-200/80 dark:border-[#1e2230] shadow-sm">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                    All Course Topics & Assignments
+                  </h3>
+                  <p className="text-xs text-gray-400">
+                    Full checklist of all topics across your active courses
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {state.subjects.flatMap((s) =>
+                  s.topics.map((t) => (
+                    <div
+                      key={t.id}
+                      className="p-3.5 rounded-2xl bg-gray-50 dark:bg-[#171b26] border border-gray-200/70 dark:border-[#1e2230] flex items-center justify-between gap-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full"
+                          style={{ backgroundColor: s.color }}
+                        />
+                        <div>
+                          <h4
+                            className={`text-xs font-bold ${
+                              t.isCompleted
+                                ? 'line-through text-gray-400'
+                                : 'text-gray-900 dark:text-white'
+                            }`}
+                          >
+                            {t.name}
+                          </h4>
+                          <span className="text-[10px] text-gray-500">
+                            {s.name} • Est. {t.estimatedHours}h • {t.difficulty}
+                          </span>
+                        </div>
+                      </div>
+
+                      <span
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                          t.isCompleted
+                            ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300'
+                            : 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300'
+                        }`}
+                      >
+                        {t.isCompleted ? 'Completed' : 'Pending'}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Courses & Syllabus Management View */}
+          {activeTab === 'courses' && (
+            <div className="bg-white dark:bg-[#12151e] p-6 rounded-3xl border border-gray-200/80 dark:border-[#1e2230] shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                    Enrolled Courses
+                  </h3>
+                  <p className="text-xs text-gray-400">
+                    Manage subjects, exam dates, and syllabi
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingSubject(null);
+                    setIsSubjectModalOpen(true);
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl bg-black dark:bg-white text-white dark:text-black font-semibold text-xs shadow-sm"
+                >
+                  + Add Course
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {state.subjects.map((subj) => (
+                  <div
+                    key={subj.id}
+                    className="p-5 rounded-2xl border border-gray-200/80 dark:border-[#1e2230] bg-gray-50/50 dark:bg-[#171b26] space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: subj.color }}
+                        />
+                        <span className="font-bold text-sm text-gray-900 dark:text-white">
+                          {subj.name}
+                        </span>
+                      </div>
+                      <span className="text-xs font-mono text-gray-400">
+                        {subj.code || 'Course'}
+                      </span>
+                    </div>
+
+                    <div className="text-xs text-gray-500 space-y-1">
+                      <p>Exam Date: <strong className="text-gray-800 dark:text-gray-200">{subj.examDate}</strong></p>
+                      <p>Syllabus: {subj.topics.length} topics</p>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2 border-t border-gray-200/60 dark:border-[#1e2230]">
+                      <button
+                        onClick={() => {
+                          setEditingSubject(subj);
+                          setIsSubjectModalOpen(true);
+                        }}
+                        className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold"
+                      >
+                        Edit Course
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Notes & Analytics View */}
+          {activeTab === 'materials' && (
+            <AnalyticsView state={state} onResetData={handleResetAll} />
+          )}
+        </main>
+      </div>
 
       {/* Modals */}
       <SetupWizard
