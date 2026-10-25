@@ -109,21 +109,25 @@ export const RightScheduleWidget: React.FC<RightScheduleWidgetProps> = ({
                           className="w-1.5 h-1.5 rounded-full"
                           style={{ backgroundColor: task.subjectColor || '#6366f1' }}
                         />
-                        <span className="text-[10px] font-bold text-slate-500 dark:text-gray-400">
+                        <span className={`text-[10px] font-bold ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
                           {task.subjectName}
                         </span>
                       </div>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                      <h4 className={`text-xs font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                         {task.topicName}
                       </h4>
-                      <p className="text-[10px] text-slate-400 dark:text-gray-400 mt-1">
+                      <p className={`text-[10px] mt-1 ${isDarkMode ? 'text-gray-400' : 'text-slate-400'}`}>
                         Block: {formatTimeHours(task.durationHours)} • {task.difficulty}
                       </p>
                     </div>
 
                     <button
                       onClick={() => onStartFocus(task)}
-                      className="p-1.5 rounded-lg bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:opacity-80 transition-opacity flex-shrink-0"
+                      className={`p-1.5 rounded-lg hover:opacity-80 transition-opacity flex-shrink-0 ${
+                        isDarkMode
+                          ? 'bg-white text-slate-900'
+                          : 'bg-slate-900 text-white'
+                      }`}
                       title="Focus on this"
                     >
                       <Play className="w-3 h-3 fill-current" />

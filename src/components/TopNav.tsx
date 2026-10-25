@@ -29,10 +29,10 @@ export const TopNav: React.FC<TopNavProps> = ({
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       {/* Left: Date & Greeting with strict contrast */}
       <div>
-        <p className="text-xs font-semibold text-slate-500 dark:text-gray-400 mb-0.5 tracking-wide">
+        <p className={`text-xs font-semibold mb-0.5 tracking-wide ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
           {dateFormatted}
         </p>
-        <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+        <h1 className={`text-2xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
           {greeting}, Student
         </h1>
       </div>
@@ -44,13 +44,19 @@ export const TopNav: React.FC<TopNavProps> = ({
           className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl border text-xs shadow-sm transition-colors cursor-pointer ${
             isDarkMode
               ? 'bg-[#12151e] border-[#1e2230] text-gray-300 hover:border-gray-700'
-              : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+              : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
           }`}
         >
           <Search className="w-3.5 h-3.5 text-slate-400" />
           <span className="hidden md:inline text-slate-400 font-medium">Ask study notes...</span>
           <span className="md:hidden text-slate-400 font-medium">Search...</span>
-          <kbd className="hidden md:inline-flex items-center gap-0.5 text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1a1f2c] border border-slate-200 dark:border-gray-700 text-slate-500 dark:text-gray-400">
+          <kbd
+            className={`hidden md:inline-flex items-center gap-0.5 text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border ${
+              isDarkMode
+                ? 'bg-[#1a1f2c] border-gray-700 text-gray-400'
+                : 'bg-slate-100 border-slate-200 text-slate-500'
+            }`}
+          >
             ⌘ K
           </kbd>
         </div>
@@ -68,7 +74,11 @@ export const TopNav: React.FC<TopNavProps> = ({
         {/* Quick Demo Plan Button */}
         <button
           onClick={onLoadSample}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-semibold bg-white dark:bg-[#12151e] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#1e2230] hover:bg-slate-50 dark:hover:bg-[#171b26] transition-colors shadow-sm"
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-semibold border shadow-sm transition-colors ${
+            isDarkMode
+              ? 'bg-[#12151e] border-[#1e2230] text-slate-300 hover:bg-[#171b26]'
+              : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+          }`}
           title="Preload sample college courses (CS, Chemistry, Math)"
         >
           <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
@@ -78,7 +88,11 @@ export const TopNav: React.FC<TopNavProps> = ({
         {/* Theme Toggle (Day / Night mode) */}
         <button
           onClick={onToggleTheme}
-          className="p-2 rounded-2xl border border-slate-200 dark:border-[#1e2230] bg-white dark:bg-[#12151e] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shadow-sm"
+          className={`p-2 rounded-2xl border shadow-sm transition-colors ${
+            isDarkMode
+              ? 'bg-[#12151e] border-[#1e2230] text-slate-300 hover:text-white'
+              : 'bg-white border-slate-200 text-slate-700 hover:text-slate-900'
+          }`}
           title={isDarkMode ? 'Switch to Day (Light) Mode' : 'Switch to Night (Dark) Mode'}
         >
           {isDarkMode ? (
@@ -89,9 +103,19 @@ export const TopNav: React.FC<TopNavProps> = ({
         </button>
 
         {/* Notification Bell */}
-        <div className="p-2 rounded-2xl border border-slate-200 dark:border-[#1e2230] bg-white dark:bg-[#12151e] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors shadow-sm relative cursor-pointer">
+        <div
+          className={`p-2 rounded-2xl border shadow-sm relative cursor-pointer transition-colors ${
+            isDarkMode
+              ? 'bg-[#12151e] border-[#1e2230] text-slate-400 hover:text-white'
+              : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'
+          }`}
+        >
           <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-[#12151e]" />
+          <span
+            className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ${
+              isDarkMode ? 'ring-[#12151e]' : 'ring-white'
+            }`}
+          />
         </div>
       </div>
     </div>

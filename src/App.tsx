@@ -507,6 +507,7 @@ export const App: React.FC = () => {
                   activeTask={activeFocusTask}
                   soundEnabled={state.settings.soundEnabled}
                   onLogCompletedSession={handleLogCompletedSession}
+                  isDarkMode={isDarkMode}
                 />
 
                 <RightScheduleWidget
@@ -535,7 +536,7 @@ export const App: React.FC = () => {
 
           {/* Schedule Timeline View */}
           {activeTab === 'schedule' && (
-            <div className="bg-white dark:bg-[#12151e] p-6 rounded-3xl border border-gray-200/80 dark:border-[#1e2230] shadow-sm">
+            <div className={`p-6 rounded-3xl border shadow-sm ${isDarkMode ? 'bg-[#12151e] border-[#1e2230]' : 'bg-white border-slate-200'}`}>
               <ScheduleTimeline
                 schedule={state.schedule}
                 onCompleteTask={handleCompleteTask}
@@ -546,13 +547,13 @@ export const App: React.FC = () => {
 
           {/* Assignments / Tasks Queue View */}
           {activeTab === 'tasks' && (
-            <div className="bg-white dark:bg-[#12151e] p-6 rounded-3xl border border-gray-200/80 dark:border-[#1e2230] shadow-sm">
+            <div className={`p-6 rounded-3xl border shadow-sm ${isDarkMode ? 'bg-[#12151e] border-[#1e2230]' : 'bg-white border-slate-200'}`}>
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                  <h3 className={`text-base font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                     All Course Topics & Assignments
                   </h3>
-                  <p className="text-xs text-gray-400">
+                  <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
                     Full checklist of all topics across your active courses
                   </p>
                 </div>
@@ -563,7 +564,9 @@ export const App: React.FC = () => {
                   s.topics.map((t) => (
                     <div
                       key={t.id}
-                      className="p-3.5 rounded-2xl bg-gray-50 dark:bg-[#171b26] border border-gray-200/70 dark:border-[#1e2230] flex items-center justify-between gap-3"
+                      className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 ${
+                        isDarkMode ? 'bg-[#171b26] border-[#1e2230]' : 'bg-slate-50 border-slate-200'
+                      }`}
                     >
                       <div className="flex items-center gap-3">
                         <span
@@ -574,13 +577,13 @@ export const App: React.FC = () => {
                           <h4
                             className={`text-xs font-bold ${
                               t.isCompleted
-                                ? 'line-through text-gray-400'
-                                : 'text-gray-900 dark:text-white'
+                                ? 'line-through text-slate-400'
+                                : isDarkMode ? 'text-white' : 'text-slate-900'
                             }`}
                           >
                             {t.name}
                           </h4>
-                          <span className="text-[10px] text-gray-500">
+                          <span className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
                             {s.name} • Est. {t.estimatedHours}h • {t.difficulty}
                           </span>
                         </div>
@@ -589,8 +592,12 @@ export const App: React.FC = () => {
                       <span
                         className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                           t.isCompleted
-                            ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300'
-                            : 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300'
+                            ? isDarkMode
+                              ? 'bg-emerald-950/40 text-emerald-300'
+                              : 'bg-emerald-50 text-emerald-600'
+                            : isDarkMode
+                            ? 'bg-amber-950/40 text-amber-300'
+                            : 'bg-amber-50 text-amber-600'
                         }`}
                       >
                         {t.isCompleted ? 'Completed' : 'Pending'}
@@ -604,13 +611,13 @@ export const App: React.FC = () => {
 
           {/* Courses & Syllabus Management View */}
           {activeTab === 'courses' && (
-            <div className="bg-white dark:bg-[#12151e] p-6 rounded-3xl border border-gray-200/80 dark:border-[#1e2230] shadow-sm space-y-4">
+            <div className={`p-6 rounded-3xl border shadow-sm space-y-4 ${isDarkMode ? 'bg-[#12151e] border-[#1e2230]' : 'bg-white border-slate-200'}`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                  <h3 className={`text-base font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                     Enrolled Courses
                   </h3>
-                  <p className="text-xs text-gray-400">
+                  <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
                     Manage subjects, exam dates, and syllabi
                   </p>
                 </div>
@@ -619,7 +626,9 @@ export const App: React.FC = () => {
                     setEditingSubject(null);
                     setIsSubjectModalOpen(true);
                   }}
-                  className="px-3.5 py-1.5 rounded-xl bg-black dark:bg-white text-white dark:text-black font-semibold text-xs shadow-sm"
+                  className={`px-3.5 py-1.5 rounded-xl font-semibold text-xs shadow-sm ${
+                    isDarkMode ? 'bg-white text-slate-900' : 'bg-slate-900 text-white'
+                  }`}
                 >
                   + Add Course
                 </button>
@@ -629,7 +638,9 @@ export const App: React.FC = () => {
                 {state.subjects.map((subj) => (
                   <div
                     key={subj.id}
-                    className="p-5 rounded-2xl border border-gray-200/80 dark:border-[#1e2230] bg-gray-50/50 dark:bg-[#171b26] space-y-3"
+                    className={`p-5 rounded-2xl border space-y-3 ${
+                      isDarkMode ? 'bg-[#171b26] border-[#1e2230]' : 'bg-slate-50 border-slate-200'
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -637,21 +648,21 @@ export const App: React.FC = () => {
                           className="w-3 h-3 rounded-full"
                           style={{ backgroundColor: subj.color }}
                         />
-                        <span className="font-bold text-sm text-gray-900 dark:text-white">
+                        <span className={`font-bold text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                           {subj.name}
                         </span>
                       </div>
-                      <span className="text-xs font-mono text-gray-400">
+                      <span className={`text-xs font-mono ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
                         {subj.code || 'Course'}
                       </span>
                     </div>
 
-                    <div className="text-xs text-gray-500 space-y-1">
-                      <p>Exam Date: <strong className="text-gray-800 dark:text-gray-200">{subj.examDate}</strong></p>
+                    <div className={`text-xs space-y-1 ${isDarkMode ? 'text-gray-400' : 'text-slate-600'}`}>
+                      <p>Exam Date: <strong className={isDarkMode ? 'text-gray-200' : 'text-slate-900'}>{subj.examDate}</strong></p>
                       <p>Syllabus: {subj.topics.length} topics</p>
                     </div>
 
-                    <div className="flex justify-end gap-2 pt-2 border-t border-gray-200/60 dark:border-[#1e2230]">
+                    <div className={`flex justify-end gap-2 pt-2 border-t ${isDarkMode ? 'border-[#1e2230]' : 'border-slate-200'}`}>
                       <button
                         onClick={() => {
                           setEditingSubject(subj);
