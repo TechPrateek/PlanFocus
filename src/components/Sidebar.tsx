@@ -13,8 +13,8 @@ import {
 } from 'lucide-react';
 
 interface SidebarProps {
-  activeTab: 'today' | 'schedule' | 'tasks' | 'courses' | 'materials';
-  setActiveTab: (tab: 'today' | 'schedule' | 'tasks' | 'courses' | 'materials') => void;
+  activeTab: 'today' | 'planly' | 'schedule' | 'tasks' | 'courses' | 'materials';
+  setActiveTab: (tab: 'today' | 'planly' | 'schedule' | 'tasks' | 'courses' | 'materials') => void;
   pendingTasksCount: number;
   coursesCount: number;
   isDarkMode: boolean;
@@ -95,17 +95,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             </button>
 
-            {/* Planly TUF Roadmap Generator Button */}
+            {/* Planly TUF Roadmap View */}
             <button
-              onClick={onOpenPlanlyModal}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:border-indigo-500 transition-all group"
+              onClick={() => setActiveTab('planly')}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                activeTab === 'planly'
+                  ? isDarkMode
+                    ? 'bg-[#1a1f2c] text-white shadow-sm'
+                    : 'bg-white text-gray-900 shadow-sm border border-gray-200/80'
+                  : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100/70 dark:hover:bg-[#151924]'
+              }`}
             >
               <div className="flex items-center gap-2.5">
-                <Sparkles className="w-4 h-4 text-indigo-500 group-hover:rotate-12 transition-transform" />
-                <span>Planly SDE Track</span>
+                <Sparkles className="w-4 h-4 text-indigo-400" />
+                <span>Planly Roadmap</span>
               </div>
-              <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-indigo-500 text-white font-bold">
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold shadow-sm">
                 TUF
+              </span>
+            </button>
+
+            {/* Planly SDE Track Quick Setup Modal Button */}
+            <button
+              onClick={onOpenPlanlyModal}
+              className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-[11px] font-bold bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 hover:border-indigo-500 transition-all group"
+            >
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                <span>Configure Track</span>
+              </div>
+              <span className="text-[9px] text-gray-400 group-hover:text-white transition-colors">
+                ⚙️
               </span>
             </button>
 

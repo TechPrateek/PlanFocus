@@ -71,6 +71,7 @@ Reflection: Connected learner's goal of understanding tech stacks to real archit
 Activity mode: Live app build, automated test suite verification, and app-map reference guide.
 
 ## Revisions
+- [Built dedicated takeUforward Planly Roadmap & Sheet Clone] — Implemented full-page `PlanlyRoadmapView.tsx` with Step-by-Step Striver A2Z accordions (Steps 1–8), filter toolbar (Difficulty, Status, Step jump), direct TUF practice links, revision bookmarks, and integrated `TufyAiModal.tsx` AI companion offering intuition, brute-force, optimal approach, and FAANG interview pitfalls.
 - [Added takeUforward Planly Integration] — Created Planly Roadmap modal with Striver's SDE Sheet, FAANG Sprint, and Campus SDE Bundle, featuring direct problem links and algorithm pattern tags.
 - [Redesigned Dashboard Layout] — Refactored dashboard into 2-column productivity workspace with left sidebar, 4 top stat cards, dark focus timer widget, and time-blocked timeline based on student user feedback.
 - [TypeScript strict mode cleanups] — Resolved unused local imports across components during Vite production build verification.

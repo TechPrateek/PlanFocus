@@ -20,12 +20,13 @@ import { RebalanceBanner } from './components/RebalanceBanner';
 import { ConflictModal } from './components/ConflictModal';
 import { StudyTipModal } from './components/StudyTipModal';
 import { PlanlyRoadmapModal } from './components/PlanlyRoadmapModal';
+import { PlanlyRoadmapView } from './components/PlanlyRoadmapView';
 import { getTodayDateString } from './utils/dateUtils';
 import confetti from 'canvas-confetti';
 
 export const App: React.FC = () => {
   const [state, setState] = useState<AppState>(() => loadStoredState());
-  const [activeTab, setActiveTab] = useState<'today' | 'schedule' | 'tasks' | 'courses' | 'materials'>('today');
+  const [activeTab, setActiveTab] = useState<'today' | 'planly' | 'schedule' | 'tasks' | 'courses' | 'materials'>('today');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('focusflow_theme') === 'dark';
   });
@@ -156,6 +157,72 @@ export const App: React.FC = () => {
         }
         return subj;
       });
+
+      return {
+        ...prev,
+        subjects: updatedSubjects,
+        schedule: updatedSchedule,
+      };
+    });
+  };
+
+  const handleToggleRevision = (topicId: string) => {
+    setState((prev) => {
+      const updatedSubjects = prev.subjects.map((subj) => ({
+        ...subj,
+        topics: subj.topics.map((t) =>
+          t.id === topicId ? { ...t, needsRevision: !t.needsRevision } : t
+        ),
+      }));
+
+      const updatedSchedule = prev.schedule.map((day) => ({
+        ...day,
+        tasks: day.tasks.map((task) =>
+          task.topicId === topicId ? { ...task, needsRevision: !task.needsRevision } : task
+        ),
+      }));
+
+      return {
+        ...prev,
+        subjects: updatedSubjects,
+        schedule: updatedSchedule,
+      };
+    });
+  };
+
+  const handleCompleteTopic = (topicId: string) => {
+    setState((prev) => {
+      let isNowCompleted = false;
+
+      const updatedSubjects = prev.subjects.map((subj) => ({
+        ...subj,
+        topics: subj.topics.map((t) => {
+          if (t.id === topicId) {
+            isNowCompleted = !t.isCompleted;
+            return {
+              ...t,
+              isCompleted: isNowCompleted,
+              completedHours: isNowCompleted ? t.estimatedHours : 0,
+            };
+          }
+          return t;
+        }),
+      }));
+
+      const updatedSchedule = prev.schedule.map((day) => ({
+        ...day,
+        tasks: day.tasks.map((task) =>
+          task.topicId === topicId ? { ...task, isCompleted: isNowCompleted } : task
+        ),
+      }));
+
+      if (isNowCompleted) {
+        confetti({
+          particleCount: 35,
+          spread: 45,
+          origin: { y: 0.7 },
+        });
+      }
 
       return {
         ...prev,
@@ -312,6 +379,7 @@ export const App: React.FC = () => {
       settings: updatedSettings,
     }));
     refreshSchedule(newSubjects, updatedSettings, []);
+    setActiveTab('planly');
     confetti({
       particleCount: 90,
       spread: 80,
@@ -427,6 +495,21 @@ export const App: React.FC = () => {
                 />
               </div>
             </div>
+          )}
+
+          {/* Dedicated Planly SDE Roadmap & Sheet View (TUF Clone) */}
+          {activeTab === 'planly' && (
+            <PlanlyRoadmapView
+              subjects={state.subjects}
+              dailyCapacity={state.settings.dailyAvailableHours}
+              onCompleteTopic={handleCompleteTopic}
+              onToggleRevision={handleToggleRevision}
+              onStartFocus={handleStartFocus}
+              onSimulateMissed={handleSimulateMissed}
+              onRebalance={handleRebalancePlan}
+              onOpenConfigure={() => setIsPlanlyModalOpen(true)}
+              geminiApiKey={state.settings.geminiApiKey}
+            />
           )}
 
           {/* Schedule Timeline View */}

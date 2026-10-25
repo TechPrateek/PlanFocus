@@ -171,6 +171,8 @@ export function generateSchedule(
           pattern: item.topic.pattern,
           problemUrl: item.topic.problemUrl,
           needsRevision: item.topic.needsRevision,
+          step: item.topic.step,
+          stepTitle: item.topic.stepTitle,
         });
 
         dayHoursUsed += roundedDuration;

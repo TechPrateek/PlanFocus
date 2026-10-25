@@ -32,6 +32,8 @@ It turns course syllabi, exam deadlines, and daily available study hours into re
    All data persists in browser `localStorage`. Survives page reloads with zero signups or login walls.
 7. **Judge & Evaluator Demo Controls:**
    Includes a 1-click **"Load Demo Data"** button (preloading realistic Computer Science, Organic Chemistry, and Linear Algebra exam scenarios) and a **"Simulate Miss"** button to test the adaptive rebalance loop in under 10 seconds.
+8. **takeUforward Planly SDE Roadmap & TUFY AI Companion:**
+   Dedicated **Planly Roadmap & Sheet View** inspired by takeUforward's newly launched Planly. Features Step-by-Step Striver A2Z and SDE 150 accordion modules (Steps 1–8), problem status tracking, difficulty filters, algorithmic pattern badges (`⚡ Kadane's`, `⚡ Two Pointers`, `⚡ Binary Search`, `⚡ 0/1 Knapsack`), direct takeUforward practice links, revision bookmarks, and **TUFY AI companion** providing intuition, brute-force $O(N^2)$, optimal Striver $O(N)$ walkthroughs, and FAANG interview pitfalls.
 
 ---
 

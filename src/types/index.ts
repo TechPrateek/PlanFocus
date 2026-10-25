@@ -11,6 +11,8 @@ export interface Topic {
   pattern?: string;
   problemUrl?: string;
   needsRevision?: boolean;
+  step?: number;
+  stepTitle?: string;
 }
 
 export interface Subject {
@@ -38,6 +40,8 @@ export interface ScheduledTask {
   pattern?: string;
   problemUrl?: string;
   needsRevision?: boolean;
+  step?: number;
+  stepTitle?: string;
 }
 
 export interface DailySchedule {
