@@ -21,6 +21,7 @@ import { ConflictModal } from './components/ConflictModal';
 import { StudyTipModal } from './components/StudyTipModal';
 import { PlanlyRoadmapModal } from './components/PlanlyRoadmapModal';
 import { PlanlyRoadmapView } from './components/PlanlyRoadmapView';
+import { SyllabusImportModal } from './components/SyllabusImportModal';
 import { getTodayDateString } from './utils/dateUtils';
 import confetti from 'canvas-confetti';
 
@@ -45,6 +46,7 @@ export const App: React.FC = () => {
 
   // Modals & Active Selections
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
+  const [isSyllabusModalOpen, setIsSyllabusModalOpen] = useState<boolean>(false);
   const [isPlanlyModalOpen, setIsPlanlyModalOpen] = useState<boolean>(false);
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState<boolean>(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
@@ -388,6 +390,23 @@ export const App: React.FC = () => {
     });
   };
 
+  const handleImportSubject = (newSubject: Subject) => {
+    setState((prev) => {
+      const updatedSubjects = [...prev.subjects, newSubject];
+      refreshSchedule(updatedSubjects, prev.settings, missedTopicIds);
+      return {
+        ...prev,
+        subjects: updatedSubjects,
+      };
+    });
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#6366f1', '#10b981', '#f59e0b'],
+    });
+  };
+
   const handleUpdateDailyHours = (newHours: number) => {
     const updatedSettings = {
       ...state.settings,
@@ -417,24 +436,24 @@ export const App: React.FC = () => {
   return (
     <div
       className={`min-h-screen flex font-sans antialiased transition-colors duration-200 ${
-        isDarkMode ? 'bg-[#090a0f] text-gray-100' : 'bg-[#f4f5f7] text-gray-900'
+        isDarkMode ? 'bg-[#090a0f] text-gray-100' : 'bg-[#f8fafc] text-slate-900'
       }`}
     >
-      {/* Left Sidebar (Exact layout as screenshot!) */}
+      {/* Left Sidebar */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         pendingTasksCount={allPendingTasks.length}
         coursesCount={state.subjects.length}
         isDarkMode={isDarkMode}
-        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
         onOpenNewSubject={() => {
           setEditingSubject(null);
           setIsSubjectModalOpen(true);
         }}
+        onOpenSyllabusModal={() => setIsSyllabusModalOpen(true)}
         onOpenWizard={() => setIsWizardOpen(true)}
         onLoadSample={handleLoadSampleData}
-        onOpenPlanlyModal={() => setIsPlanlyModalOpen(true)}
+        dailyCapacity={state.settings.dailyAvailableHours}
       />
 
       {/* Main Workspace Area */}
@@ -443,8 +462,9 @@ export const App: React.FC = () => {
           {/* Top Bar with Date, Greeting, Search & Demo Button */}
           <TopNav
             onLoadSample={handleLoadSampleData}
-            onOpenPlanlyModal={() => setIsPlanlyModalOpen(true)}
+            onOpenSyllabusModal={() => setIsSyllabusModalOpen(true)}
             isDarkMode={isDarkMode}
+            onToggleTheme={() => setIsDarkMode(!isDarkMode)}
           />
 
           {/* Adaptive Rebalance Notification Banner */}
@@ -475,6 +495,7 @@ export const App: React.FC = () => {
                     setIsStudyTipOpen(true);
                   }}
                   onOpenWizard={() => setIsWizardOpen(true)}
+                  onOpenSyllabusModal={() => setIsSyllabusModalOpen(true)}
                   onLoadSample={handleLoadSampleData}
                   isDarkMode={isDarkMode}
                 />
@@ -655,6 +676,13 @@ export const App: React.FC = () => {
       </div>
 
       {/* Modals */}
+      <SyllabusImportModal
+        isOpen={isSyllabusModalOpen}
+        onClose={() => setIsSyllabusModalOpen(false)}
+        onImportSubject={handleImportSubject}
+        isDarkMode={isDarkMode}
+      />
+
       <SetupWizard
         isOpen={isWizardOpen}
         onClose={() => setIsWizardOpen(false)}

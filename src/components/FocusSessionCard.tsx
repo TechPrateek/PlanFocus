@@ -93,33 +93,33 @@ export const FocusSessionCard: React.FC<FocusSessionCardProps> = ({
   const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
   return (
-    <div className="bg-[#15171e] text-white rounded-3xl p-6 shadow-xl border border-white/5 relative overflow-hidden">
+    <div className="bg-white dark:bg-[#15171e] text-slate-900 dark:text-white rounded-3xl p-6 shadow-xl border border-slate-200 dark:border-white/5 relative overflow-hidden transition-colors">
       {/* Top Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <span className="text-xs font-medium text-gray-400">
+          <span className="text-xs font-semibold text-slate-500 dark:text-gray-400">
             {isBreak ? 'Rest & Recharge' : 'Focus Session'}
           </span>
           {activeTask ? (
-            <h4 className="text-sm font-bold text-white truncate max-w-[200px]">
+            <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[200px]">
               {activeTask.topicName}
             </h4>
           ) : (
-            <p className="text-[11px] text-gray-400">Deep Work • Block Distractions</p>
+            <p className="text-[11px] text-slate-500 dark:text-gray-400">Deep Work • Block Distractions</p>
           )}
         </div>
 
-        <div className="flex items-center gap-1 text-gray-400 hover:text-white cursor-pointer">
+        <div className="flex items-center gap-1 text-slate-400 dark:text-gray-400 hover:text-slate-600 dark:hover:text-white cursor-pointer">
           <MoreHorizontal className="w-5 h-5" />
         </div>
       </div>
 
       {/* Big Digits Display */}
       <div className="text-center my-6">
-        <div className="text-5xl font-extrabold font-mono tracking-tight text-white mb-2">
+        <div className="text-5xl font-extrabold font-mono tracking-tight text-slate-900 dark:text-white mb-2">
           {formattedTime}
         </div>
-        <p className="text-xs text-gray-400 font-medium">
+        <p className="text-xs text-slate-500 dark:text-gray-400 font-medium">
           {isBreak ? '5 min pause' : 'Deep Work • Block Distractions'}
         </p>
       </div>
@@ -128,7 +128,7 @@ export const FocusSessionCard: React.FC<FocusSessionCardProps> = ({
       <div className="flex items-center justify-between gap-3 pt-2">
         <button
           onClick={resetTimer}
-          className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition-colors"
+          className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors"
           title="Reset Session"
         >
           <RotateCcw className="w-4 h-4" />
@@ -136,7 +136,7 @@ export const FocusSessionCard: React.FC<FocusSessionCardProps> = ({
 
         <button
           onClick={togglePlay}
-          className="flex-1 py-3 px-5 rounded-full bg-white hover:bg-gray-100 text-black font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95"
+          className="flex-1 py-3 px-5 rounded-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-gray-100 dark:text-black font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95"
         >
           {isRunning ? (
             <>
@@ -153,7 +153,7 @@ export const FocusSessionCard: React.FC<FocusSessionCardProps> = ({
 
         <button
           onClick={skipTimer}
-          className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition-colors"
+          className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors"
           title="Skip or Complete Block"
         >
           <SkipForward className="w-4 h-4" />
@@ -162,7 +162,7 @@ export const FocusSessionCard: React.FC<FocusSessionCardProps> = ({
 
       {/* Subject badge if active */}
       {activeTask && (
-        <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-gray-400">
+        <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-[11px] text-slate-500 dark:text-gray-400">
           <span className="flex items-center gap-1.5">
             <span
               className="w-2 h-2 rounded-full"
@@ -170,7 +170,7 @@ export const FocusSessionCard: React.FC<FocusSessionCardProps> = ({
             />
             {activeTask.subjectName}
           </span>
-          <span className="font-mono text-gray-300">{activeTask.difficulty}</span>
+          <span className="font-mono text-slate-700 dark:text-gray-300 font-semibold">{activeTask.difficulty}</span>
         </div>
       )}
     </div>

@@ -67,4 +67,15 @@ assert(kadaneGuidance.optimal.timeComplexity.includes('O(N)'), 'Kadane optimal t
 assert(kadaneGuidance.takeuforwardUrl.includes('takeuforward.org'), 'Should point to takeUforward tutorial');
 console.log('✅ TUFY AI Guidance verified: Intuition, Brute-Force, Optimal, and Invariant returned cleanly');
 
+// 5. Verify Syllabus & Document Parsing Engine
+import { parseSyllabusText, createSubjectFromParsed, SAMPLE_SYLLABI } from '../src/services/syllabusParser.ts';
+
+const parsed = parseSyllabusText(SAMPLE_SYLLABI[0].content);
+assert(parsed.courseName.includes('Distributed Systems') || parsed.courseCode === 'CS 350', 'Should extract course code and title');
+assert(parsed.topics.length >= 4, 'Should extract modular topics from syllabus text');
+assert(parsed.topics.some(t => t.difficulty === 'hard'), 'Should auto-assign difficulty heuristics based on technical keywords');
+const importedSubject = createSubjectFromParsed(parsed);
+assert(importedSubject.topics.length === parsed.topics.length, 'Generated subject should contain all parsed modules');
+console.log(`✅ Syllabus Parsing verified: Extracted '${parsed.courseName} (${parsed.courseCode})' with ${parsed.topics.length} topics and exam date ${parsed.examDate}`);
+
 console.log('\n🎉 ALL MECHANICAL VERIFICATIONS PASSED CLEANLY!');

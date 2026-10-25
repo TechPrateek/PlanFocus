@@ -44,63 +44,63 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     <div className="space-y-8 max-w-5xl mx-auto">
       {/* Top Level Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-xl bg-[#12151e] border border-[#1e2230]">
-          <div className="flex items-center justify-between text-gray-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Active Streak</span>
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#12151e] border border-slate-200 dark:border-[#1e2230] shadow-sm">
+          <div className="flex items-center justify-between text-slate-400 dark:text-gray-400 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Active Streak</span>
             <Flame className="w-4 h-4 text-amber-500 fill-amber-500/20" />
           </div>
-          <div className="text-2xl font-bold font-mono text-white">
+          <div className="text-2xl font-black font-mono text-slate-900 dark:text-white">
             {streak} {streak === 1 ? 'Day' : 'Days'}
           </div>
-          <p className="text-[11px] text-gray-500 mt-1">Consistent study momentum</p>
+          <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-1">Consistent study momentum</p>
         </div>
 
-        <div className="p-5 rounded-xl bg-[#12151e] border border-[#1e2230]">
-          <div className="flex items-center justify-between text-gray-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Total Focus Time</span>
-            <Clock className="w-4 h-4 text-indigo-400" />
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#12151e] border border-slate-200 dark:border-[#1e2230] shadow-sm">
+          <div className="flex items-center justify-between text-slate-400 dark:text-gray-400 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Total Focus Time</span>
+            <Clock className="w-4 h-4 text-indigo-500" />
           </div>
-          <div className="text-2xl font-bold font-mono text-white">{totalStudyHours}h</div>
-          <p className="text-[11px] text-gray-500 mt-1">
+          <div className="text-2xl font-black font-mono text-slate-900 dark:text-white">{totalStudyHours}h</div>
+          <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-1">
             {studyLogs.length} logged sessions
           </p>
         </div>
 
-        <div className="p-5 rounded-xl bg-[#12151e] border border-[#1e2230]">
-          <div className="flex items-center justify-between text-gray-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Topics Mastered</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#12151e] border border-slate-200 dark:border-[#1e2230] shadow-sm">
+          <div className="flex items-center justify-between text-slate-400 dark:text-gray-400 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Topics Mastered</span>
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           </div>
-          <div className="text-2xl font-bold font-mono text-white">
+          <div className="text-2xl font-black font-mono text-slate-900 dark:text-white">
             {completedTopicsCount} / {allTopicsCount}
           </div>
-          <p className="text-[11px] text-gray-500 mt-1">
+          <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-1">
             {allTopicsCount > 0
               ? `${Math.round((completedTopicsCount / allTopicsCount) * 100)}% coverage`
               : '0% coverage'}
           </p>
         </div>
 
-        <div className="p-5 rounded-xl bg-[#12151e] border border-[#1e2230]">
-          <div className="flex items-center justify-between text-gray-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Active Courses</span>
-            <BookOpen className="w-4 h-4 text-indigo-400" />
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#12151e] border border-slate-200 dark:border-[#1e2230] shadow-sm">
+          <div className="flex items-center justify-between text-slate-400 dark:text-gray-400 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Active Courses</span>
+            <BookOpen className="w-4 h-4 text-indigo-500" />
           </div>
-          <div className="text-2xl font-bold font-mono text-white">{subjects.length}</div>
-          <p className="text-[11px] text-gray-500 mt-1">With scheduled exams</p>
+          <div className="text-2xl font-black font-mono text-slate-900 dark:text-white">{subjects.length}</div>
+          <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-1">With scheduled exams</p>
         </div>
       </div>
 
       {/* Subject-Wise Mastery Progress */}
-      <section className="p-6 rounded-xl bg-[#12151e] border border-[#1e2230]">
-        <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center gap-2">
-          <BarChart2 className="w-4 h-4 text-indigo-400" />
+      <section className="p-6 rounded-3xl bg-white dark:bg-[#12151e] border border-slate-200 dark:border-[#1e2230] shadow-sm">
+        <h3 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight mb-4 flex items-center gap-2">
+          <BarChart2 className="w-4 h-4 text-indigo-500" />
           Syllabus Coverage by Subject
         </h3>
 
         {subjectProgress.length === 0 ? (
-          <p className="text-xs text-gray-500 py-6 text-center">
-            No subjects added yet. Add courses to view your progress analytics.
+          <p className="text-xs text-slate-500 dark:text-gray-400 py-6 text-center">
+            No subjects added yet. Add courses or import a syllabus to view your progress analytics.
           </p>
         ) : (
           <div className="space-y-5">
@@ -112,15 +112,15 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                       className="w-2.5 h-2.5 rounded-full"
                       style={{ backgroundColor: subj.color || '#6366f1' }}
                     />
-                    <span className="font-semibold text-white">{subj.name}</span>
-                    {subj.code && <span className="text-gray-500 font-mono">({subj.code})</span>}
+                    <span className="font-bold text-slate-900 dark:text-white">{subj.name}</span>
+                    {subj.code && <span className="text-slate-400 dark:text-gray-500 font-mono">({subj.code})</span>}
                   </div>
-                  <div className="text-gray-400 font-mono">
+                  <div className="text-slate-500 dark:text-gray-400 font-mono text-[11px]">
                     {subj.completedHours}h / {subj.totalHoursRequired}h ({subj.percent}%)
                   </div>
                 </div>
 
-                <div className="w-full h-2.5 bg-[#171b26] rounded-full overflow-hidden border border-[#1e2230]">
+                <div className="w-full h-2.5 bg-slate-100 dark:bg-[#171b26] rounded-full overflow-hidden border border-slate-200 dark:border-[#1e2230]">
                   <div
                     className="h-full rounded-full transition-all duration-700"
                     style={{
@@ -130,7 +130,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                   />
                 </div>
 
-                <div className="flex justify-between text-[11px] text-gray-500">
+                <div className="flex justify-between text-[11px] text-slate-500 dark:text-gray-400">
                   <span>
                     {subj.completedTopics} of {subj.totalTopics} topics completed
                   </span>
@@ -143,14 +143,14 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       </section>
 
       {/* Recent Study Session History */}
-      <section className="p-6 rounded-xl bg-[#12151e] border border-[#1e2230]">
-        <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center gap-2">
-          <Award className="w-4 h-4 text-amber-400" />
+      <section className="p-6 rounded-3xl bg-white dark:bg-[#12151e] border border-slate-200 dark:border-[#1e2230] shadow-sm">
+        <h3 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight mb-4 flex items-center gap-2">
+          <Award className="w-4 h-4 text-amber-500" />
           Recent Focus Sessions
         </h3>
 
         {studyLogs.length === 0 ? (
-          <p className="text-xs text-gray-500 py-6 text-center">
+          <p className="text-xs text-slate-500 dark:text-gray-400 py-6 text-center">
             No focus sessions logged yet. Start the Pomodoro timer to build your log!
           </p>
         ) : (
@@ -158,17 +158,17 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             {studyLogs.slice(0, 8).map((log) => (
               <div
                 key={log.id}
-                className="p-3 rounded-lg bg-[#171b26] border border-[#1e2230] flex items-center justify-between text-xs"
+                className="p-3 rounded-xl bg-slate-50 dark:bg-[#171b26] border border-slate-200 dark:border-[#1e2230] flex items-center justify-between text-xs"
               >
                 <div>
-                  <h4 className="font-semibold text-white">{log.topicName}</h4>
-                  <p className="text-[11px] text-gray-400">{log.subjectName}</p>
+                  <h4 className="font-bold text-slate-900 dark:text-white">{log.topicName}</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-gray-400">{log.subjectName}</p>
                 </div>
                 <div className="text-right">
-                  <span className="font-mono font-semibold text-indigo-400">
+                  <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
                     +{log.durationMinutes}m
                   </span>
-                  <p className="text-[10px] text-gray-500">
+                  <p className="text-[10px] text-slate-400 dark:text-gray-500">
                     {new Date(log.timestamp).toLocaleTimeString([], {
                       hour: '2-digit',
                       minute: '2-digit',
@@ -182,14 +182,14 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       </section>
 
       {/* Danger Zone: Reset Data */}
-      <div className="pt-6 border-t border-[#1e2230] flex justify-end">
+      <div className="pt-6 border-t border-slate-200 dark:border-[#1e2230] flex justify-end">
         <button
           onClick={() => {
             if (confirm('Are you sure you want to clear all subjects, schedules, and analytics?')) {
               onResetData();
             }
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-rose-400 hover:text-white hover:bg-rose-600/20 border border-rose-500/20 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs text-rose-600 dark:text-rose-400 hover:text-white hover:bg-rose-600 border border-rose-300 dark:border-rose-500/30 transition-colors"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           Reset All Data

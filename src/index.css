@@ -4,7 +4,10 @@
 
 @layer base {
   body {
-    @apply bg-[#090a0f] text-gray-100 font-sans antialiased;
+    @apply font-sans antialiased transition-colors duration-200 bg-[#f8fafc] text-slate-900;
+  }
+  .dark body {
+    @apply bg-[#090a0f] text-gray-100;
   }
 }
 
@@ -13,13 +16,23 @@
   width: 6px;
   height: 6px;
 }
-::-webkit-scrollbar-track {
+.dark ::-webkit-scrollbar-track {
   background: #090a0f;
 }
-::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+.dark ::-webkit-scrollbar-thumb {
   background: #1e2230;
   border-radius: 9999px;
 }
-::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
   background: #2e354a;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

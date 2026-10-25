@@ -30,27 +30,27 @@ export const RightScheduleWidget: React.FC<RightScheduleWidgetProps> = ({
       className={`rounded-3xl p-6 border shadow-sm transition-colors ${
         isDarkMode
           ? 'bg-[#12151e] border-[#1e2230] text-white'
-          : 'bg-white border-gray-200/80 text-gray-900'
+          : 'bg-white border-slate-200 text-slate-900'
       }`}
     >
       {/* Widget Header */}
       <div className="flex items-center justify-between mb-5">
-        <h3 className="font-bold text-sm tracking-tight text-gray-900 dark:text-white">
+        <h3 className="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white">
           Today's Schedule
         </h3>
 
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-gray-400 font-medium">Auto-sync</span>
+          <span className="text-[11px] text-slate-400 dark:text-gray-400 font-medium">Auto-sync</span>
           <button
             onClick={() => setAutoSync(!autoSync)}
             className={`w-9 h-5 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
-              autoSync ? 'bg-black dark:bg-white' : 'bg-gray-300 dark:bg-gray-700'
+              autoSync ? 'bg-slate-900 dark:bg-white' : 'bg-slate-300 dark:bg-gray-700'
             }`}
           >
             <div
               className={`w-3.5 h-3.5 rounded-full transition-transform ${
                 autoSync
-                  ? 'bg-white dark:bg-black translate-x-4'
+                  ? 'bg-white dark:bg-slate-900 translate-x-4'
                   : 'bg-white translate-x-0'
               }`}
             />
@@ -109,21 +109,21 @@ export const RightScheduleWidget: React.FC<RightScheduleWidgetProps> = ({
                           className="w-1.5 h-1.5 rounded-full"
                           style={{ backgroundColor: task.subjectColor || '#6366f1' }}
                         />
-                        <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-gray-400">
                           {task.subjectName}
                         </span>
                       </div>
-                      <h4 className="text-xs font-bold text-gray-900 dark:text-white leading-tight">
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
                         {task.topicName}
                       </h4>
-                      <p className="text-[10px] text-gray-400 mt-1">
+                      <p className="text-[10px] text-slate-400 dark:text-gray-400 mt-1">
                         Block: {formatTimeHours(task.durationHours)} • {task.difficulty}
                       </p>
                     </div>
 
                     <button
                       onClick={() => onStartFocus(task)}
-                      className="p-1.5 rounded-lg bg-black text-white dark:bg-white dark:text-black hover:opacity-80 transition-opacity flex-shrink-0"
+                      className="p-1.5 rounded-lg bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:opacity-80 transition-opacity flex-shrink-0"
                       title="Focus on this"
                     >
                       <Play className="w-3 h-3 fill-current" />

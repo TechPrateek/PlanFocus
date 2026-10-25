@@ -84,53 +84,53 @@ export const SubjectModal: React.FC<SubjectModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg bg-[#12151e] border border-[#1e2230] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="p-4 border-b border-[#1e2230] flex items-center justify-between">
-          <h2 className="text-base font-bold text-white tracking-tight">
-            {initialSubject ? 'Edit Subject' : 'Add New Subject'}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-lg bg-white dark:bg-[#12151e] border border-slate-200 dark:border-[#1e2230] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-colors">
+        <div className="p-5 border-b border-slate-200 dark:border-[#1e2230] bg-slate-50 dark:bg-[#171b26] flex items-center justify-between">
+          <h2 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
+            {initialSubject ? 'Edit Course' : 'Add New Course'}
           </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-[#1e2230] transition-colors"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1e2230] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 overflow-y-auto flex-1 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2 sm:col-span-1">
-              <label className="text-[11px] font-medium text-gray-400 block mb-1">
-                Subject Name
+              <label className="text-[11px] font-bold text-slate-500 dark:text-gray-400 block mb-1">
+                Course Name
               </label>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Physics"
-                className="w-full bg-[#171b26] border border-[#1e2230] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                placeholder="e.g. Operating Systems"
+                className="w-full bg-slate-50 dark:bg-[#171b26] border border-slate-200 dark:border-[#1e2230] rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
               />
             </div>
 
             <div className="col-span-2 sm:col-span-1">
-              <label className="text-[11px] font-medium text-gray-400 block mb-1">
+              <label className="text-[11px] font-bold text-slate-500 dark:text-gray-400 block mb-1">
                 Course Code
               </label>
               <input
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                placeholder="e.g. PHYS 101"
-                className="w-full bg-[#171b26] border border-[#1e2230] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                placeholder="e.g. CS 350"
+                className="w-full bg-slate-50 dark:bg-[#171b26] border border-slate-200 dark:border-[#1e2230] rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] font-medium text-gray-400 block mb-1">
+              <label className="text-[11px] font-bold text-slate-500 dark:text-gray-400 block mb-1">
                 Exam Date
               </label>
               <input
@@ -138,50 +138,50 @@ export const SubjectModal: React.FC<SubjectModalProps> = ({
                 required
                 value={examDate}
                 onChange={(e) => setExamDate(e.target.value)}
-                className="w-full bg-[#171b26] border border-[#1e2230] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                className="w-full bg-slate-50 dark:bg-[#171b26] border border-slate-200 dark:border-[#1e2230] rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
               />
             </div>
 
             <div>
-              <label className="text-[11px] font-medium text-gray-400 block mb-1">
+              <label className="text-[11px] font-bold text-slate-500 dark:text-gray-400 block mb-1">
                 Color Tag
               </label>
               <input
                 type="color"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                className="w-full h-8 bg-[#171b26] border border-[#1e2230] rounded-lg cursor-pointer px-1 py-1"
+                className="w-full h-9 bg-slate-50 dark:bg-[#171b26] border border-slate-200 dark:border-[#1e2230] rounded-xl cursor-pointer px-1 py-1"
               />
             </div>
           </div>
 
           {/* Topics */}
-          <div className="pt-2 border-t border-[#1e2230]">
+          <div className="pt-3 border-t border-slate-200 dark:border-[#1e2230]">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+              <span className="text-[11px] font-extrabold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
                 Topics & Workload
               </span>
               <button
                 type="button"
                 onClick={handleAddTopic}
-                className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+                className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
               >
                 <Plus className="w-3 h-3" /> Add Topic
               </button>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {topics.map((t) => (
                 <div
                   key={t.id}
-                  className="grid grid-cols-12 gap-2 items-center bg-[#171b26] p-2 rounded-lg border border-[#1e2230]"
+                  className="grid grid-cols-12 gap-2 items-center bg-slate-50 dark:bg-[#171b26] p-2.5 rounded-xl border border-slate-200 dark:border-[#1e2230]"
                 >
                   <input
                     type="text"
                     value={t.name}
                     onChange={(e) => handleUpdateTopic(t.id, 'name', e.target.value)}
                     placeholder="Topic name"
-                    className="col-span-6 bg-transparent text-xs text-white focus:outline-none"
+                    className="col-span-6 bg-transparent text-xs text-slate-900 dark:text-white font-medium focus:outline-none"
                   />
 
                   <select
@@ -189,7 +189,7 @@ export const SubjectModal: React.FC<SubjectModalProps> = ({
                     onChange={(e) =>
                       handleUpdateTopic(t.id, 'difficulty', e.target.value as Difficulty)
                     }
-                    className="col-span-3 bg-[#12151e] border border-[#1e2230] text-gray-300 text-xs rounded px-1.5 py-1 focus:outline-none"
+                    className="col-span-3 bg-white dark:bg-[#12151e] border border-slate-200 dark:border-[#1e2230] text-slate-700 dark:text-gray-300 text-xs rounded-lg px-2 py-1 focus:outline-none font-bold"
                   >
                     <option value="easy">Easy</option>
                     <option value="medium">Medium</option>
@@ -206,16 +206,16 @@ export const SubjectModal: React.FC<SubjectModalProps> = ({
                       onChange={(e) =>
                         handleUpdateTopic(t.id, 'estimatedHours', parseFloat(e.target.value) || 1)
                       }
-                      className="w-10 bg-[#12151e] border border-[#1e2230] text-xs text-white rounded px-1 py-1 text-center focus:outline-none"
+                      className="w-10 bg-white dark:bg-[#12151e] border border-slate-200 dark:border-[#1e2230] text-xs text-slate-900 dark:text-white rounded-lg px-1 py-1 text-center font-bold focus:outline-none"
                     />
-                    <span className="text-[10px] text-gray-400">h</span>
+                    <span className="text-[10px] text-slate-400">h</span>
                   </div>
 
                   {topics.length > 1 && (
                     <button
                       type="button"
                       onClick={() => handleRemoveTopic(t.id)}
-                      className="col-span-1 text-gray-500 hover:text-rose-400 transition-colors"
+                      className="col-span-1 text-slate-400 hover:text-rose-500 transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5 mx-auto" />
                     </button>
@@ -225,7 +225,7 @@ export const SubjectModal: React.FC<SubjectModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-3 border-t border-[#1e2230]">
+          <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-[#1e2230]">
             {initialSubject && onDelete ? (
               <button
                 type="button"
@@ -233,7 +233,7 @@ export const SubjectModal: React.FC<SubjectModalProps> = ({
                   onDelete(initialSubject.id);
                   onClose();
                 }}
-                className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1"
+                className="text-xs text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 font-semibold"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Delete Course
               </button>
@@ -243,10 +243,10 @@ export const SubjectModal: React.FC<SubjectModalProps> = ({
 
             <button
               type="submit"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition-all"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition-all"
             >
               <Check className="w-3.5 h-3.5" />
-              Save Subject
+              Save Course
             </button>
           </div>
         </form>
