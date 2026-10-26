@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ScheduledTask } from '../types';
-import { Play, Pause, RotateCcw, SkipForward, MoreHorizontal } from 'lucide-react';
+import { Play, Pause, RotateCcw, SkipForward } from 'lucide-react';
 import { audioService } from '../services/audioService';
 import confetti from 'canvas-confetti';
 
@@ -58,7 +58,7 @@ export const FocusSessionCard: React.FC<FocusSessionCardProps> = ({
     }
     if (!isBreak) {
       confetti({
-        particleCount: 70,
+        particleCount: 80,
         spread: 60,
         origin: { y: 0.6 },
       });
@@ -94,58 +94,93 @@ export const FocusSessionCard: React.FC<FocusSessionCardProps> = ({
   const seconds = secondsRemaining % 60;
   const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
+  const cardBorder = isDarkMode
+    ? 'border-[rgba(217,234,224,0.12)] bg-[#121616]'
+    : 'border-slate-200 bg-white shadow-sm';
+  const textHeading = isDarkMode ? 'text-white' : 'text-slate-900';
+  const textMuted = isDarkMode ? 'text-[#82918c]' : 'text-slate-500';
+
   return (
-    <div
-      className={`rounded-3xl p-6 border shadow-sm relative overflow-hidden transition-colors ${
-        isDarkMode
-          ? 'bg-[#15171e] text-white border-white/5'
-          : 'bg-white text-slate-900 border-slate-200'
-      }`}
-    >
-      {/* Top Header */}
-      <div className="flex items-center justify-between mb-4">
+    <div className={`rounded-xl p-5 border relative overflow-hidden transition-colors ${cardBorder}`}>
+      {/* Top Header Eyebrow */}
+      <div className="flex items-center justify-between mb-3">
         <div>
-          <span className={`text-xs font-semibold ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
-            {isBreak ? 'Rest & Recharge' : 'Focus Session'}
+          <span className="text-[10px] font-mono tracking-wider uppercase text-[#82918c] block">
+            {isBreak ? 'REST // RECHARGE' : 'DEEP WORK // POMODORO'}
           </span>
-          {activeTask ? (
-            <h4 className={`text-sm font-bold truncate max-w-[200px] ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              {activeTask.topicName}
-            </h4>
-          ) : (
-            <p className={`text-[11px] ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
-              Deep Work • Block Distractions
-            </p>
-          )}
+          <h4 className={`text-xs font-bold truncate max-w-[200px] mt-0.5 ${textHeading}`}>
+            {activeTask ? activeTask.topicName : 'General Focus Session'}
+          </h4>
         </div>
 
-        <div
-          className={`flex items-center gap-1 cursor-pointer transition-colors ${
-            isDarkMode ? 'text-gray-400 hover:text-white' : 'text-slate-400 hover:text-slate-600'
-          }`}
-        >
-          <MoreHorizontal className="w-5 h-5" />
+        <div className="flex items-center gap-1.5">
+          <span className="live-pip" />
+          <span className={`text-[10px] font-mono font-bold ${isDarkMode ? 'text-[#abf5c0]' : 'text-emerald-700'}`}>
+            {isRunning ? 'RUNNING' : 'STANDBY'}
+          </span>
         </div>
       </div>
 
-      {/* Big Digits Display */}
-      <div className="text-center my-6">
-        <div className={`text-5xl font-extrabold font-mono tracking-tight mb-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+      {/* Mode Switcher Tabs */}
+      <div className={`flex items-center gap-1 p-1 rounded-lg mb-5 border ${isDarkMode ? 'bg-[#171c1b] border-[rgba(217,234,224,0.08)]' : 'bg-slate-100 border-slate-200'}`}>
+        <button
+          onClick={() => {
+            setIsRunning(false);
+            setIsBreak(false);
+            setDurationMinutes(25);
+            setSecondsRemaining(25 * 60);
+          }}
+          className={`flex-1 py-1 rounded text-[10px] font-mono font-bold transition-all ${
+            !isBreak
+              ? isDarkMode
+                ? 'bg-[#abf5c0] text-[#0b0d0d] shadow-sm'
+                : 'bg-emerald-600 text-white shadow-sm'
+              : textMuted
+          }`}
+        >
+          25m Focus
+        </button>
+        <button
+          onClick={() => {
+            setIsRunning(false);
+            setIsBreak(true);
+            setDurationMinutes(5);
+            setSecondsRemaining(5 * 60);
+          }}
+          className={`flex-1 py-1 rounded text-[10px] font-mono font-bold transition-all ${
+            isBreak
+              ? isDarkMode
+                ? 'bg-[#abf5c0] text-[#0b0d0d] shadow-sm'
+                : 'bg-emerald-600 text-white shadow-sm'
+              : textMuted
+          }`}
+        >
+          5m Break
+        </button>
+      </div>
+
+      {/* Big Digits Display (PayRevive Mint) */}
+      <div className="text-center my-4">
+        <div
+          className={`text-5xl sm:text-6xl font-black font-mono tracking-tight mb-1.5 transition-colors ${
+            isDarkMode ? 'text-[#abf5c0]' : 'text-emerald-700'
+          }`}
+        >
           {formattedTime}
         </div>
-        <p className={`text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
-          {isBreak ? '5 min pause' : 'Deep Work • Block Distractions'}
+        <p className={`text-[11px] font-mono ${textMuted}`}>
+          {isBreak ? '5 min cognitive reset' : 'Block distractions & execute'}
         </p>
       </div>
 
-      {/* Controls: Reset, Big Pill Button, Skip */}
-      <div className="flex items-center justify-between gap-3 pt-2">
+      {/* Controls: Reset, Big Action Button, Skip */}
+      <div className="flex items-center justify-between gap-2.5 pt-2">
         <button
           onClick={resetTimer}
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+          className={`p-2.5 rounded-lg border transition-colors ${
             isDarkMode
-              ? 'bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white'
-              : 'bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900'
+              ? 'border-[rgba(217,234,224,0.12)] bg-[#171c1b] text-[#82918c] hover:text-white'
+              : 'border-slate-200 bg-slate-100 text-slate-600 hover:text-slate-900'
           }`}
           title="Reset Session"
         >
@@ -154,31 +189,31 @@ export const FocusSessionCard: React.FC<FocusSessionCardProps> = ({
 
         <button
           onClick={togglePlay}
-          className={`flex-1 py-3 px-5 rounded-full font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95 ${
+          className={`flex-1 py-2.5 px-4 rounded-lg font-bold text-xs font-mono flex items-center justify-center gap-2 shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 ${
             isDarkMode
-              ? 'bg-white hover:bg-gray-100 text-slate-900'
-              : 'bg-slate-900 hover:bg-slate-800 text-white'
+              ? 'bg-[#abf5c0] hover:bg-[#cdfad8] text-[#0b0d0d] shadow-[0_6px_25px_rgba(171,245,192,0.2)]'
+              : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
           }`}
         >
           {isRunning ? (
             <>
               <Pause className="w-4 h-4 fill-current" />
-              <span>Pause Focus</span>
+              <span>PAUSE SESSION</span>
             </>
           ) : (
             <>
               <Play className="w-4 h-4 fill-current" />
-              <span>Start Focus</span>
+              <span>START FOCUS</span>
             </>
           )}
         </button>
 
         <button
           onClick={skipTimer}
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+          className={`p-2.5 rounded-lg border transition-colors ${
             isDarkMode
-              ? 'bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white'
-              : 'bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900'
+              ? 'border-[rgba(217,234,224,0.12)] bg-[#171c1b] text-[#82918c] hover:text-white'
+              : 'border-slate-200 bg-slate-100 text-slate-600 hover:text-slate-900'
           }`}
           title="Skip or Complete Block"
         >
@@ -186,22 +221,22 @@ export const FocusSessionCard: React.FC<FocusSessionCardProps> = ({
         </button>
       </div>
 
-      {/* Subject badge if active */}
+      {/* Active Target Course Pill */}
       {activeTask && (
         <div
-          className={`mt-4 pt-3 border-t flex items-center justify-between text-[11px] ${
-            isDarkMode ? 'border-white/10 text-gray-400' : 'border-slate-200 text-slate-500'
+          className={`mt-4 pt-3 border-t flex items-center justify-between text-[10px] font-mono ${
+            isDarkMode ? 'border-[rgba(217,234,224,0.08)] text-[#82918c]' : 'border-slate-200 text-slate-500'
           }`}
         >
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-1.5 truncate">
             <span
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: activeTask.subjectColor || '#6366f1' }}
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ backgroundColor: activeTask.subjectColor || '#abf5c0' }}
             />
             {activeTask.subjectName}
           </span>
-          <span className={`font-mono font-semibold ${isDarkMode ? 'text-gray-300' : 'text-slate-700'}`}>
-            {activeTask.difficulty}
+          <span className={`font-bold ${isDarkMode ? 'text-[#e5eee8]' : 'text-slate-700'}`}>
+            {activeTask.difficulty.toUpperCase()}
           </span>
         </div>
       )}

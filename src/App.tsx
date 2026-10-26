@@ -435,8 +435,8 @@ export const App: React.FC = () => {
 
   return (
     <div
-      className={`min-h-screen flex font-sans antialiased transition-colors duration-200 ${
-        isDarkMode ? 'bg-[#090a0f] text-gray-100' : 'bg-[#f8fafc] text-slate-900'
+      className={`min-h-screen flex font-sans antialiased transition-colors duration-200 app-glow ${
+        isDarkMode ? 'bg-[#0b0d0d] text-[#e5eee8]' : 'bg-[#f8fafc] text-slate-900'
       }`}
     >
       {/* Left Sidebar */}

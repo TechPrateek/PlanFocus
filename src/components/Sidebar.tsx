@@ -9,6 +9,7 @@ import {
   Plus,
   UploadCloud,
   BarChart3,
+  Layers,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -36,108 +37,127 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onLoadSample,
   dailyCapacity,
 }) => {
-  const inactiveBtnClass = isDarkMode
-    ? 'text-gray-400 hover:text-gray-200 hover:bg-[#151924]'
-    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100';
-
-  const activeBtnClass = isDarkMode
-    ? 'bg-[#1a1f2c] text-white shadow-sm border border-[#2e354a]'
-    : 'bg-white text-slate-900 shadow-sm border border-slate-200 font-bold';
+  const getNavItemClass = (tab: typeof activeTab) => {
+    const isActive = activeTab === tab;
+    if (isActive) {
+      return isDarkMode
+        ? 'text-[#abf5c0] bg-gradient-to-r from-[rgba(171,245,192,0.14)] to-transparent border-l-2 border-[#abf5c0] font-bold'
+        : 'text-emerald-800 bg-gradient-to-r from-emerald-500/15 to-transparent border-l-2 border-emerald-600 font-bold';
+    }
+    return isDarkMode
+      ? 'text-[#82918c] hover:text-[#e5eee8] hover:bg-white/[0.04]'
+      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100';
+  };
 
   return (
     <aside
-      className={`w-64 flex-shrink-0 flex flex-col justify-between border-r transition-colors duration-200 select-none ${
+      className={`w-60 flex-shrink-0 flex flex-col justify-between border-r transition-colors duration-200 select-none ${
         isDarkMode
-          ? 'bg-[#0e111a] border-[#1e2230] text-gray-300'
-          : 'bg-[#fafbfc] border-slate-200 text-slate-700'
+          ? 'bg-[#0b0d0d]/90 backdrop-blur-xl border-[rgba(217,234,224,0.12)] text-[#e5eee8]'
+          : 'bg-white/95 backdrop-blur-xl border-slate-200 text-slate-800'
       }`}
     >
       {/* Top Brand & Navigation */}
       <div className="p-5">
-        {/* Brand Logo */}
-        <div className="flex items-center gap-3 mb-7 px-1">
+        {/* Brand Wordmark (PayRevive Serif/Sans Style) */}
+        <div className="flex items-center gap-3 mb-8 px-1">
           <div
-            className={`w-9 h-9 rounded-xl flex items-center justify-center font-black tracking-tighter text-sm shadow-md ${
+            className={`w-9 h-9 rounded-xl flex items-center justify-center font-mono font-bold text-xs shadow-md transition-all ${
               isDarkMode
-                ? 'bg-white text-slate-900'
-                : 'bg-slate-900 text-white'
+                ? 'bg-[#171c1b] text-[#abf5c0] border border-[rgba(217,234,224,0.15)] ring-1 ring-[#abf5c0]/20'
+                : 'bg-emerald-600 text-white shadow-emerald-500/20'
             }`}
           >
-            FF
+            <Layers className="w-4 h-4" />
           </div>
           <div>
+            <div className="flex items-baseline gap-1 leading-none">
+              <span className={`text-base font-extrabold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                Focus
+              </span>
+              <span className={`text-base font-serif italic font-bold tracking-tight ${isDarkMode ? 'text-[#abf5c0]' : 'text-emerald-600'}`}>
+                Flow
+              </span>
+            </div>
             <span
-              className={`font-black text-base tracking-tight block leading-none ${
-                isDarkMode ? 'text-white' : 'text-slate-900'
+              className={`text-[9px] font-mono tracking-wider uppercase block mt-1 ${
+                isDarkMode ? 'text-[#82918c]' : 'text-slate-500'
               }`}
             >
-              FOCUSFLOW
-            </span>
-            <span
-              className={`text-[10px] font-semibold tracking-wider uppercase mt-1 block ${
-                isDarkMode ? 'text-gray-400' : 'text-slate-500'
-              }`}
-            >
-              STUDENT PLANNER
+              AI Study Intelligence
             </span>
           </div>
         </div>
 
-        {/* MAIN Section */}
+        {/* COMMAND CENTER Section */}
         <div className="mb-6">
           <span
-            className={`text-[10px] font-bold tracking-wider uppercase block px-3 mb-2 ${
-              isDarkMode ? 'text-gray-500' : 'text-slate-400'
+            className={`text-[9px] font-mono tracking-widest uppercase block px-3 mb-2 font-medium ${
+              isDarkMode ? 'text-[#82918c]' : 'text-slate-400'
             }`}
           >
-            MAIN MENU
+            COMMAND CENTER
           </span>
           <nav className="space-y-1">
-            {/* Dashboard */}
+            {/* Dashboard / Recovery Feed */}
             <button
               onClick={() => setActiveTab('today')}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === 'today' ? activeBtnClass : inactiveBtnClass
-              }`}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs transition-all ${getNavItemClass(
+                'today'
+              )}`}
             >
               <div className="flex items-center gap-2.5">
-                <LayoutDashboard className="w-4 h-4 text-indigo-500" />
-                <span>Dashboard</span>
+                <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
+                <span className="font-semibold tracking-tight">Today Feed</span>
               </div>
             </button>
 
             {/* Import Syllabus Action */}
             <button
               onClick={onOpenSyllabusModal}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group ${inactiveBtnClass}`}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs transition-all group ${
+                isDarkMode
+                  ? 'text-[#82918c] hover:text-[#e5eee8] hover:bg-white/[0.04]'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
             >
               <div className="flex items-center gap-2.5">
-                <UploadCloud className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" />
-                <span>Import Syllabus</span>
+                <UploadCloud
+                  className={`w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-110 ${
+                    isDarkMode ? 'text-[#abf5c0]' : 'text-emerald-600'
+                  }`}
+                />
+                <span className="font-semibold tracking-tight">Import Syllabus</span>
               </div>
               <span
-                className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold ${
                   isDarkMode
-                    ? 'bg-emerald-950/60 text-emerald-400'
-                    : 'bg-emerald-100 text-emerald-700'
+                    ? 'bg-[#171c1b] text-[#abf5c0] border border-[#abf5c0]/30'
+                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                 }`}
               >
                 PDF/TXT
               </span>
             </button>
 
-            {/* Planly TUF Roadmap View */}
+            {/* Planly TUF Roadmap */}
             <button
               onClick={() => setActiveTab('planly')}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === 'planly' ? activeBtnClass : inactiveBtnClass
-              }`}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs transition-all ${getNavItemClass(
+                'planly'
+              )}`}
             >
               <div className="flex items-center gap-2.5">
-                <Sparkles className="w-4 h-4 text-purple-500" />
-                <span>Planly Roadmap</span>
+                <Sparkles className="w-4 h-4 flex-shrink-0" />
+                <span className="font-semibold tracking-tight">Planly Roadmap</span>
               </div>
-              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold shadow-sm">
+              <span
+                className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold ${
+                  isDarkMode
+                    ? 'bg-[#171c1b] text-[#abf5c0] border border-[#abf5c0]/30'
+                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                }`}
+              >
                 TUF
               </span>
             </button>
@@ -145,31 +165,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {/* Schedule */}
             <button
               onClick={() => setActiveTab('schedule')}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === 'schedule' ? activeBtnClass : inactiveBtnClass
-              }`}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs transition-all ${getNavItemClass(
+                'schedule'
+              )}`}
             >
               <div className="flex items-center gap-2.5">
-                <Calendar className="w-4 h-4 text-indigo-500" />
-                <span>Study Schedule</span>
+                <Calendar className="w-4 h-4 flex-shrink-0" />
+                <span className="font-semibold tracking-tight">Timeline</span>
               </div>
             </button>
 
-            {/* Tasks / Assignments */}
+            {/* Assignments / Tasks Queue */}
             <button
               onClick={() => setActiveTab('tasks')}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === 'tasks' ? activeBtnClass : inactiveBtnClass
-              }`}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs transition-all ${getNavItemClass(
+                'tasks'
+              )}`}
             >
               <div className="flex items-center gap-2.5">
-                <CheckSquare className="w-4 h-4 text-indigo-500" />
-                <span>Assignments</span>
+                <CheckSquare className="w-4 h-4 flex-shrink-0" />
+                <span className="font-semibold tracking-tight">Queue</span>
               </div>
               {pendingTasksCount > 0 && (
                 <span
-                  className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${
-                    isDarkMode ? 'bg-white text-slate-900' : 'bg-slate-900 text-white'
+                  className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-bold ${
+                    isDarkMode
+                      ? 'bg-amber-400/10 text-amber-300 border border-amber-400/20'
+                      : 'bg-amber-50 text-amber-700 border border-amber-200'
                   }`}
                 >
                   {pendingTasksCount}
@@ -177,33 +199,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
               )}
             </button>
 
-            {/* Courses & Syllabi */}
+            {/* Courses */}
             <button
               onClick={() => setActiveTab('courses')}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === 'courses' ? activeBtnClass : inactiveBtnClass
-              }`}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs transition-all ${getNavItemClass(
+                'courses'
+              )}`}
             >
               <div className="flex items-center gap-2.5">
-                <BookOpen className="w-4 h-4 text-indigo-500" />
-                <span>Courses</span>
+                <BookOpen className="w-4 h-4 flex-shrink-0" />
+                <span className="font-semibold tracking-tight">Courses</span>
               </div>
-              <span
-                className={`text-[11px] font-semibold ${
-                  isDarkMode ? 'text-gray-400' : 'text-slate-500'
-                }`}
-              >
+              <span className={`text-[10px] font-mono ${isDarkMode ? 'text-[#82918c]' : 'text-slate-400'}`}>
                 {coursesCount}
               </span>
             </button>
           </nav>
         </div>
 
-        {/* WORKSPACE Section */}
+        {/* WORKSPACE & TOOLS Section */}
         <div className="mb-6">
           <span
-            className={`text-[10px] font-bold tracking-wider uppercase block px-3 mb-2 ${
-              isDarkMode ? 'text-gray-500' : 'text-slate-400'
+            className={`text-[9px] font-mono tracking-widest uppercase block px-3 mb-2 font-medium ${
+              isDarkMode ? 'text-[#82918c]' : 'text-slate-400'
             }`}
           >
             TOOLS
@@ -211,81 +229,70 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <nav className="space-y-1">
             <button
               onClick={() => setActiveTab('materials')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === 'materials' ? activeBtnClass : inactiveBtnClass
-              }`}
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs transition-all ${getNavItemClass(
+                'materials'
+              )}`}
             >
-              <BarChart3 className="w-4 h-4 text-indigo-500" />
-              <span>Progress & Analytics</span>
+              <BarChart3 className="w-4 h-4 flex-shrink-0" />
+              <span className="font-semibold tracking-tight">Analytics</span>
             </button>
 
             <button
               onClick={onOpenWizard}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors ${inactiveBtnClass}`}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-colors ${
+                isDarkMode
+                  ? 'text-[#82918c] hover:text-[#e5eee8] hover:bg-white/[0.04]'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
             >
-              <Sparkles className="w-4 h-4 text-amber-500" />
+              <Sparkles className="w-4 h-4 text-amber-400" />
               <span>Setup Wizard</span>
             </button>
 
             <button
               onClick={onLoadSample}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors ${inactiveBtnClass}`}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-colors ${
+                isDarkMode
+                  ? 'text-[#82918c] hover:text-[#e5eee8] hover:bg-white/[0.04]'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
             >
-              <Folder className="w-4 h-4 text-emerald-500" />
+              <Folder className={`w-4 h-4 ${isDarkMode ? 'text-[#abf5c0]' : 'text-emerald-600'}`} />
               <span>Preload Demo Data</span>
             </button>
           </nav>
         </div>
       </div>
 
-      {/* Bottom Profile & Capacity Footer */}
-      <div className={`p-4 border-t ${isDarkMode ? 'border-[#1e2230]' : 'border-slate-200'}`}>
-        <div
-          className={`flex items-center justify-between p-2.5 rounded-2xl border shadow-sm transition-colors ${
-            isDarkMode
-              ? 'bg-[#151924] border-[#1e2230]'
-              : 'bg-white border-slate-200'
-          }`}
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div
-              className={`w-8 h-8 rounded-xl font-bold text-xs flex items-center justify-center flex-shrink-0 ${
-                isDarkMode
-                  ? 'bg-indigo-900/50 text-indigo-300'
-                  : 'bg-indigo-100 text-indigo-700'
-              }`}
-            >
-              ST
-            </div>
-            <div className="min-w-0">
-              <span
-                className={`text-xs font-bold truncate block leading-tight ${
-                  isDarkMode ? 'text-white' : 'text-slate-900'
-                }`}
-              >
-                Student
-              </span>
-              <span
-                className={`text-[10px] truncate block ${
-                  isDarkMode ? 'text-gray-400' : 'text-slate-500'
-                }`}
-              >
-                Cap: {dailyCapacity}h / day
-              </span>
-            </div>
+      {/* PayRevive-style Bottom Rail Status */}
+      <div
+        className={`p-4 border-t flex items-center justify-between ${
+          isDarkMode
+            ? 'border-[rgba(217,234,224,0.12)] bg-[#121616]/60'
+            : 'border-slate-200 bg-slate-50'
+        }`}
+      >
+        <div className="flex items-center gap-2.5">
+          <span className="status-dot" />
+          <div className="text-[10px] font-mono leading-tight">
+            <span className={isDarkMode ? 'text-[#82918c]' : 'text-slate-500'}>Status: </span>
+            <strong className={`font-bold ${isDarkMode ? 'text-[#abf5c0]' : 'text-emerald-700'}`}>
+              Active ({dailyCapacity}h)
+            </strong>
           </div>
-          <button
-            onClick={onOpenNewSubject}
-            className={`p-1.5 rounded-lg transition-colors ${
-              isDarkMode
-                ? 'bg-[#1a1f2c] text-gray-300 hover:bg-indigo-500 hover:text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-indigo-500 hover:text-white'
-            }`}
-            title="Add Course"
-          >
-            <Plus className="w-3.5 h-3.5" />
-          </button>
         </div>
+
+        <button
+          onClick={onOpenNewSubject}
+          className={`p-1.5 rounded-lg transition-all ${
+            isDarkMode
+              ? 'bg-[#171c1b] hover:bg-[#abf5c0] hover:text-[#0b0d0d] text-[#abf5c0] border border-[#abf5c0]/30'
+              : 'bg-white hover:bg-emerald-600 hover:text-white text-emerald-700 border border-slate-200'
+          }`}
+          title="Add New Course"
+        >
+          <Plus className="w-3.5 h-3.5" />
+        </button>
       </div>
     </aside>
   );

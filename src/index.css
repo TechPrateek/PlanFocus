@@ -2,28 +2,80 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --ink: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --line: rgba(15, 23, 42, 0.08);
+  --muted: #64748b;
+  --fog: #0f172a;
+  --mint: #10b981;
+  --mint-deep: #059669;
+  --mint-glow: rgba(16, 185, 129, 0.2);
+  --mono: 'DM Mono', monospace;
+  --sans: 'Manrope', sans-serif;
+  --serif: 'Playfair Display', Georgia, serif;
+}
+
+.dark {
+  --ink: #0b0d0d;
+  --surface: #121616;
+  --surface-2: #171c1b;
+  --line: rgba(217, 234, 224, 0.13);
+  --muted: #82918c;
+  --fog: #e5eee8;
+  --mint: #abf5c0;
+  --mint-deep: #5dbf80;
+  --mint-glow: rgba(171, 245, 192, 0.25);
+}
+
 @layer base {
   body {
     @apply font-sans antialiased transition-colors duration-200 bg-[#f8fafc] text-slate-900;
   }
   .dark body {
-    @apply bg-[#090a0f] text-gray-100;
+    @apply bg-[#0b0d0d] text-[#e5eee8];
   }
+}
+
+/* PayRevive-style ambient radial glow */
+.dark .app-glow {
+  background: radial-gradient(circle at 75% -10%, rgba(95, 206, 136, 0.08), transparent 32rem), #0b0d0d;
+}
+
+.app-glow {
+  background: radial-gradient(circle at 75% -10%, rgba(16, 185, 129, 0.05), transparent 32rem), #f8fafc;
+}
+
+/* Glowing live pip indicator */
+.live-pip, .status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 9999px;
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15), 0 0 10px rgba(16, 185, 129, 0.8);
+}
+
+.dark .live-pip, .dark .status-dot {
+  background: #abf5c0;
+  box-shadow: 0 0 0 3px rgba(171, 245, 192, 0.15), 0 0 12px rgba(171, 245, 192, 0.85);
 }
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 .dark ::-webkit-scrollbar-track {
-  background: #090a0f;
+  background: #0b0d0d;
 }
 ::-webkit-scrollbar-track {
   background: #f1f5f9;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: #1e2230;
+  background: rgba(217, 234, 224, 0.15);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb {
@@ -31,8 +83,5 @@
   border-radius: 9999px;
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #2e354a;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(171, 245, 192, 0.35);
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Bell, Sparkles, FileText, Sun, Moon } from 'lucide-react';
+import { FileText, Sun, Moon, Zap } from 'lucide-react';
 
 interface TopNavProps {
   onLoadSample: () => void;
@@ -16,8 +16,8 @@ export const TopNav: React.FC<TopNavProps> = ({
 }) => {
   const now = new Date();
   const dateFormatted = now.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
+    weekday: 'short',
+    month: 'short',
     day: 'numeric',
   });
 
@@ -26,96 +26,84 @@ export const TopNav: React.FC<TopNavProps> = ({
     hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-      {/* Left: Date & Greeting with strict contrast */}
-      <div>
-        <p className={`text-xs font-semibold mb-0.5 tracking-wide ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
-          {dateFormatted}
-        </p>
-        <h1 className={`text-2xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          {greeting}, Student
-        </h1>
-      </div>
-
-      {/* Right: Search, Import Syllabus, Theme Toggle, Demo Load */}
-      <div className="flex items-center gap-2.5 flex-wrap">
-        {/* Search bar */}
-        <div
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl border text-xs shadow-sm transition-colors cursor-pointer ${
-            isDarkMode
-              ? 'bg-[#12151e] border-[#1e2230] text-gray-300 hover:border-gray-700'
-              : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-          }`}
-        >
-          <Search className="w-3.5 h-3.5 text-slate-400" />
-          <span className="hidden md:inline text-slate-400 font-medium">Ask study notes...</span>
-          <span className="md:hidden text-slate-400 font-medium">Search...</span>
-          <kbd
-            className={`hidden md:inline-flex items-center gap-0.5 text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border ${
-              isDarkMode
-                ? 'bg-[#1a1f2c] border-gray-700 text-gray-400'
-                : 'bg-slate-100 border-slate-200 text-slate-500'
-            }`}
-          >
-            ⌘ K
-          </kbd>
+    <div className={`pb-6 mb-7 border-b ${isDarkMode ? 'border-[rgba(217,234,224,0.12)]' : 'border-slate-200'}`}>
+      {/* Eyebrow topline */}
+      <div className="flex items-center justify-between mb-3 text-[10px] font-mono tracking-widest uppercase">
+        <div className="flex items-center gap-2.5">
+          <span className="live-pip" />
+          <span className={isDarkMode ? 'text-[#82918c]' : 'text-slate-500'}>
+            STUDY INTELLIGENCE &bull; ADAPTIVE REBALANCE ENGINE
+          </span>
         </div>
 
-        {/* Primary Action: Import Syllabus (PDF / TXT) */}
-        <button
-          onClick={onOpenSyllabusModal}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 transition-all hover:scale-[1.02]"
-          title="Import syllabus from PDF, TXT or paste course topics"
-        >
-          <FileText className="w-3.5 h-3.5" />
-          <span>Import Syllabus</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <div className={`flex items-center gap-1.5 ${isDarkMode ? 'text-[#82918c]' : 'text-slate-500'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isDarkMode ? 'bg-[#abf5c0]' : 'bg-emerald-500'}`} />
+            <span>Synced &bull; {dateFormatted}</span>
+          </div>
+        </div>
+      </div>
 
-        {/* Quick Demo Plan Button */}
-        <button
-          onClick={onLoadSample}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-semibold border shadow-sm transition-colors ${
-            isDarkMode
-              ? 'bg-[#12151e] border-[#1e2230] text-slate-300 hover:bg-[#171b26]'
-              : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-          }`}
-          title="Preload sample college courses (CS, Chemistry, Math)"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-          <span className="hidden sm:inline">Demo Plan</span>
-        </button>
-
-        {/* Theme Toggle (Day / Night mode) */}
-        <button
-          onClick={onToggleTheme}
-          className={`p-2 rounded-2xl border shadow-sm transition-colors ${
-            isDarkMode
-              ? 'bg-[#12151e] border-[#1e2230] text-slate-300 hover:text-white'
-              : 'bg-white border-slate-200 text-slate-700 hover:text-slate-900'
-          }`}
-          title={isDarkMode ? 'Switch to Day (Light) Mode' : 'Switch to Night (Dark) Mode'}
-        >
-          {isDarkMode ? (
-            <Sun className="w-4 h-4 text-amber-400" />
-          ) : (
-            <Moon className="w-4 h-4 text-slate-700" />
-          )}
-        </button>
-
-        {/* Notification Bell */}
-        <div
-          className={`p-2 rounded-2xl border shadow-sm relative cursor-pointer transition-colors ${
-            isDarkMode
-              ? 'bg-[#12151e] border-[#1e2230] text-slate-400 hover:text-white'
-              : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <Bell className="w-4 h-4" />
-          <span
-            className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ${
-              isDarkMode ? 'ring-[#12151e]' : 'ring-white'
+      {/* Main Header & Actions Row */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1
+            className={`text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight ${
+              isDarkMode ? 'text-white' : 'text-slate-900'
             }`}
-          />
+          >
+            {greeting}, <span className={isDarkMode ? 'text-[#abf5c0]' : 'text-emerald-700'}>Student</span>
+          </h1>
+          <p className={`text-xs mt-1 max-w-xl leading-relaxed ${isDarkMode ? 'text-[#82918c]' : 'text-slate-600'}`}>
+            FocusFlow dynamically budgets your syllabus topics before exam dates and recalculates workload instantly when sessions are missed.
+          </p>
+        </div>
+
+        {/* Action Buttons (PayRevive Style) */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Quick Demo Preload Pill */}
+          <button
+            onClick={onLoadSample}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded text-xs font-mono font-medium border transition-all ${
+              isDarkMode
+                ? 'border-[rgba(217,234,224,0.15)] bg-[#171c1b] text-[#e5eee8] hover:border-[#abf5c0]/50'
+                : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 shadow-sm'
+            }`}
+            title="Preload sample college courses (CS, Chemistry, Math)"
+          >
+            <Zap className={`w-3.5 h-3.5 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
+            <span>Demo Plan</span>
+          </button>
+
+          {/* Primary Action Button: Ingest Syllabus (PayRevive Mint Signature Button) */}
+          <button
+            onClick={onOpenSyllabusModal}
+            className={`flex items-center gap-2 px-4 py-2 rounded text-xs font-bold transition-all shadow-md hover:-translate-y-0.5 active:translate-y-0 ${
+              isDarkMode
+                ? 'bg-[#abf5c0] hover:bg-[#cdfad8] text-[#0b0d0d] shadow-[0_6px_25px_rgba(171,245,192,0.18)]'
+                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>Ingest Syllabus (PDF/TXT)</span>
+          </button>
+
+          {/* Theme Toggle Button */}
+          <button
+            onClick={onToggleTheme}
+            className={`p-2 rounded border transition-colors ${
+              isDarkMode
+                ? 'border-[rgba(217,234,224,0.15)] bg-[#171c1b] text-[#e5eee8] hover:border-[#abf5c0]/50'
+                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 shadow-sm'
+            }`}
+            title={isDarkMode ? 'Switch to Day Mode' : 'Switch to Night Mode'}
+          >
+            {isDarkMode ? (
+              <Sun className="w-4 h-4 text-amber-400" />
+            ) : (
+              <Moon className="w-4 h-4 text-slate-700" />
+            )}
+          </button>
         </div>
       </div>
     </div>

@@ -25,33 +25,42 @@ export const RightScheduleWidget: React.FC<RightScheduleWidgetProps> = ({
     { start: '06:00 PM', end: '07:30 PM' },
   ];
 
+  const cardBorder = isDarkMode
+    ? 'border-[rgba(217,234,224,0.12)] bg-[#121616]'
+    : 'border-slate-200 bg-white shadow-sm';
+  const textHeading = isDarkMode ? 'text-white' : 'text-slate-900';
+  const textMuted = isDarkMode ? 'text-[#82918c]' : 'text-slate-500';
+
   return (
-    <div
-      className={`rounded-3xl p-6 border shadow-sm transition-colors ${
-        isDarkMode
-          ? 'bg-[#12151e] border-[#1e2230] text-white'
-          : 'bg-white border-slate-200 text-slate-900'
-      }`}
-    >
+    <div className={`rounded-xl p-5 border transition-colors ${cardBorder}`}>
       {/* Widget Header */}
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white">
-          Today's Schedule
-        </h3>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <span className="text-[10px] font-mono tracking-wider uppercase text-[#82918c] block">
+            SLOT ALLOCATION
+          </span>
+          <h3 className={`font-extrabold text-sm tracking-tight mt-0.5 ${textHeading}`}>
+            Today's Timeline
+          </h3>
+        </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-slate-400 dark:text-gray-400 font-medium">Auto-sync</span>
+          <span className={`text-[10px] font-mono ${textMuted}`}>Auto-sync</span>
           <button
             onClick={() => setAutoSync(!autoSync)}
-            className={`w-9 h-5 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
-              autoSync ? 'bg-slate-900 dark:bg-white' : 'bg-slate-300 dark:bg-gray-700'
+            className={`w-8 h-4 flex items-center rounded-full p-0.5 cursor-pointer transition-colors ${
+              autoSync
+                ? isDarkMode
+                  ? 'bg-[#abf5c0]'
+                  : 'bg-emerald-600'
+                : isDarkMode
+                ? 'bg-gray-800'
+                : 'bg-slate-300'
             }`}
           >
             <div
-              className={`w-3.5 h-3.5 rounded-full transition-transform ${
-                autoSync
-                  ? 'bg-white dark:bg-slate-900 translate-x-4'
-                  : 'bg-white translate-x-0'
+              className={`w-3 h-3 rounded-full transition-transform ${
+                autoSync ? 'bg-[#0b0d0d] translate-x-4' : 'bg-white translate-x-0'
               }`}
             />
           </button>
@@ -60,11 +69,11 @@ export const RightScheduleWidget: React.FC<RightScheduleWidgetProps> = ({
 
       {/* Schedule Items with Timeline Dot */}
       {tasks.length === 0 ? (
-        <p className="text-xs text-gray-400 py-6 text-center italic">
-          No tasks scheduled for today.
+        <p className="text-xs text-[#82918c] py-6 text-center italic font-mono">
+          No active blocks scheduled for today.
         </p>
       ) : (
-        <div className="relative pl-6 space-y-5 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-200 dark:before:bg-gray-800">
+        <div className="relative pl-5 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-px before:bg-[rgba(217,234,224,0.15)]">
           {tasks.slice(0, 4).map((task, idx) => {
             const slot = timeSlots[idx] || { start: `${9 + idx}:00 AM`, end: `${10 + idx}:30 AM` };
             const isFirst = idx === 0;
@@ -73,18 +82,26 @@ export const RightScheduleWidget: React.FC<RightScheduleWidgetProps> = ({
               <div key={task.id} className="relative group">
                 {/* Timeline Dot */}
                 <div
-                  className={`absolute -left-6 top-1 w-2.5 h-2.5 rounded-full border-2 transition-transform group-hover:scale-125 ${
+                  className={`absolute -left-5 top-1.5 w-2 h-2 rounded-full transition-transform group-hover:scale-125 ${
                     isFirst
-                      ? 'bg-indigo-600 border-white dark:border-[#12151e] ring-4 ring-indigo-500/20'
-                      : 'bg-gray-300 dark:bg-gray-700 border-white dark:border-[#12151e]'
+                      ? 'bg-[#abf5c0] ring-2 ring-[#abf5c0]/30'
+                      : isDarkMode
+                      ? 'bg-gray-700 border border-gray-600'
+                      : 'bg-slate-300'
                   }`}
                 />
 
                 {/* Time row */}
-                <div className="flex items-center gap-2 text-[11px] font-mono text-gray-400 mb-1">
-                  <span>{slot.start} - {slot.end}</span>
+                <div className="flex items-center gap-2 text-[10px] font-mono text-[#82918c] mb-1">
+                  <span>
+                    {slot.start} - {slot.end}
+                  </span>
                   {isFirst && (
-                    <span className="text-[9px] font-sans font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 px-1.5 py-0.2 rounded">
+                    <span
+                      className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded ${
+                        isDarkMode ? 'bg-[#abf5c0]/15 text-[#abf5c0]' : 'bg-emerald-100 text-emerald-800'
+                      }`}
+                    >
                       Active Now
                     </span>
                   )}
@@ -92,41 +109,41 @@ export const RightScheduleWidget: React.FC<RightScheduleWidgetProps> = ({
 
                 {/* Task Card Box */}
                 <div
-                  className={`p-3 rounded-2xl border transition-all ${
+                  className={`p-3 rounded-lg border transition-all ${
                     isFirst
                       ? isDarkMode
-                        ? 'bg-[#171b26] border-indigo-500/40 shadow-sm'
-                        : 'bg-indigo-50/40 border-indigo-200 shadow-sm'
+                        ? 'bg-[#171c1b] border-[#abf5c0]/30 shadow-sm'
+                        : 'bg-emerald-50/50 border-emerald-200 shadow-sm'
                       : isDarkMode
-                      ? 'bg-[#151924]/60 border-transparent hover:border-[#1e2230]'
-                      : 'bg-gray-50/70 border-transparent hover:border-gray-200'
+                      ? 'bg-[#171c1b]/60 border-[rgba(217,234,224,0.06)] hover:border-[rgba(217,234,224,0.2)]'
+                      : 'bg-slate-50 border-slate-200'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div>
+                    <div className="min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">
                         <span
-                          className="w-1.5 h-1.5 rounded-full"
-                          style={{ backgroundColor: task.subjectColor || '#6366f1' }}
+                          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: task.subjectColor || '#abf5c0' }}
                         />
-                        <span className={`text-[10px] font-bold ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
+                        <span className={`text-[10px] font-mono font-semibold truncate ${textMuted}`}>
                           {task.subjectName}
                         </span>
                       </div>
-                      <h4 className={`text-xs font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      <h4 className={`text-xs font-bold leading-tight truncate ${textHeading}`}>
                         {task.topicName}
                       </h4>
-                      <p className={`text-[10px] mt-1 ${isDarkMode ? 'text-gray-400' : 'text-slate-400'}`}>
-                        Block: {formatTimeHours(task.durationHours)} • {task.difficulty}
+                      <p className={`text-[10px] font-mono mt-1 ${textMuted}`}>
+                        {formatTimeHours(task.durationHours)} &bull; {task.difficulty}
                       </p>
                     </div>
 
                     <button
                       onClick={() => onStartFocus(task)}
-                      className={`p-1.5 rounded-lg hover:opacity-80 transition-opacity flex-shrink-0 ${
+                      className={`p-1.5 rounded transition-all flex-shrink-0 ${
                         isDarkMode
-                          ? 'bg-white text-slate-900'
-                          : 'bg-slate-900 text-white'
+                          ? 'bg-[#abf5c0] hover:bg-[#cdfad8] text-[#0b0d0d]'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white'
                       }`}
                       title="Focus on this"
                     >

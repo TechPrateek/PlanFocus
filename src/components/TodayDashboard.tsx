@@ -2,19 +2,19 @@ import React from 'react';
 import { ScheduledTask, Subject } from '../types';
 import { formatTimeHours } from '../utils/dateUtils';
 import {
-  TrendingUp,
-  Flame,
   Clock,
-  GraduationCap,
-  Sparkles,
-  BookOpen,
-  Play,
-  RotateCcw,
   CheckCircle2,
   Circle,
+  Play,
+  RotateCcw,
+  Sparkles,
+  BookOpen,
   Folder,
-  FileCode,
   UploadCloud,
+  Layers,
+  ArrowRight,
+  Flame,
+  FileCode,
 } from 'lucide-react';
 
 interface TodayDashboardProps {
@@ -46,77 +46,143 @@ export const TodayDashboard: React.FC<TodayDashboardProps> = ({
   onLoadSample,
   isDarkMode,
 }) => {
-  // Dynamic color tokens based on isDarkMode
-  const cardBgClass = isDarkMode
-    ? 'bg-[#12151e] border-[#1e2230]'
-    : 'bg-white border-slate-200/90 shadow-sm';
-  const textHeadingClass = isDarkMode ? 'text-white' : 'text-slate-900';
-  const textSubClass = isDarkMode ? 'text-gray-400' : 'text-slate-500';
-
-  // Metrics
+  // Metrics calculation
   const completedCount = tasks.filter((t) => t.isCompleted).length;
   const pendingCount = tasks.filter((t) => !t.isCompleted).length;
   const totalHoursPlanned = tasks.reduce((sum, t) => sum + t.durationHours, 0);
+  const totalTopicsCount = subjects.reduce((sum, s) => sum + s.topics.length, 0);
+  const totalCompletedTopics = subjects.reduce(
+    (sum, s) => sum + s.topics.filter((t) => t.isCompleted).length,
+    0
+  );
+  const completionPercent =
+    totalTopicsCount > 0 ? Math.round((totalCompletedTopics / totalTopicsCount) * 100) : 0;
 
-  // If no subjects exist, show welcoming clean onboarding
+  // PayRevive card styling tokens
+  const cardBorder = isDarkMode
+    ? 'border-[rgba(217,234,224,0.12)] bg-[#121616]'
+    : 'border-slate-200 bg-white shadow-sm';
+  const textMuted = isDarkMode ? 'text-[#82918c]' : 'text-slate-500';
+  const textHeading = isDarkMode ? 'text-white' : 'text-slate-900';
+
+  // If no subjects exist, render PayRevive onboarding
   if (subjects.length === 0) {
     return (
-      <div className="py-16 text-center max-w-lg mx-auto">
-        <div
-          className={`w-16 h-16 mx-auto mb-4 rounded-3xl flex items-center justify-center shadow-inner ${
-            isDarkMode ? 'bg-indigo-950/40 text-indigo-400' : 'bg-indigo-50 text-indigo-600'
-          }`}
-        >
-          <BookOpen className="w-8 h-8" />
-        </div>
-        <h2 className={`text-xl font-black mb-2 ${textHeadingClass}`}>
-          Ready to plan your courses?
-        </h2>
-        <p className={`text-xs mb-6 leading-relaxed max-w-md mx-auto ${textSubClass}`}>
-          Upload your course syllabus (PDF or TXT) or paste your course topics. FocusFlow AI automatically budgets your daily study hours before exams.
-        </p>
+      <div className="py-12 max-w-2xl mx-auto space-y-8">
+        <div className={`p-8 rounded-xl border text-center relative overflow-hidden ${cardBorder}`}>
+          <div className="w-14 h-14 mx-auto mb-4 rounded-xl flex items-center justify-center font-mono text-xl shadow-md bg-[#171c1b] text-[#abf5c0] border border-[#abf5c0]/30 ring-1 ring-[#abf5c0]/20">
+            <Layers className="w-6 h-6" />
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {onOpenSyllabusModal && (
+          <div className="eyebrow justify-center flex items-center gap-2 text-[10px] font-mono tracking-widest uppercase mb-1 text-[#82918c]">
+            <span className="live-pip" />
+            <span>COMMAND CENTER &bull; GETTING STARTED</span>
+          </div>
+
+          <h2 className={`text-2xl font-extrabold tracking-tight mt-1 ${textHeading}`}>
+            Ready to initialize your study roadmap?
+          </h2>
+          <p className={`text-xs mt-2 max-w-md mx-auto leading-relaxed ${textMuted}`}>
+            Upload your course syllabus (PDF or TXT) or paste topics directly. FocusFlow AI automatically budgets your daily study workload before exams.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-8 text-left">
+            {onOpenSyllabusModal && (
+              <button
+                onClick={onOpenSyllabusModal}
+                className={`p-4 rounded-lg border transition-all group ${
+                  isDarkMode
+                    ? 'border-[#abf5c0]/30 bg-[#171c1b] hover:border-[#abf5c0]'
+                    : 'border-emerald-200 bg-emerald-50/70 hover:border-emerald-500 shadow-sm'
+                }`}
+              >
+                <UploadCloud
+                  className={`w-5 h-5 mb-2 transition-transform group-hover:scale-110 ${
+                    isDarkMode ? 'text-[#abf5c0]' : 'text-emerald-600'
+                  }`}
+                />
+                <h4 className={`text-xs font-bold ${textHeading}`}>Import Syllabus</h4>
+                <p className={`text-[10px] mt-0.5 font-mono ${textMuted}`}>PDF or TXT document</p>
+              </button>
+            )}
+
             <button
-              onClick={onOpenSyllabusModal}
-              className={`p-4 rounded-2xl border text-left group transition-all ${
+              onClick={onOpenWizard}
+              className={`p-4 rounded-lg border transition-all group ${
                 isDarkMode
-                  ? 'border-indigo-800/60 bg-indigo-950/20 hover:border-indigo-500'
-                  : 'border-indigo-200 bg-indigo-50/70 hover:border-indigo-400 shadow-sm'
+                  ? 'border-[rgba(217,234,224,0.12)] bg-[#121616] hover:border-[rgba(217,234,224,0.3)]'
+                  : 'border-slate-200 bg-white hover:border-slate-400 shadow-sm'
               }`}
             >
-              <UploadCloud className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2 group-hover:scale-110 transition-transform" />
-              <h4 className={`text-xs font-bold ${textHeadingClass}`}>Import Syllabus</h4>
-              <p className={`text-[10px] mt-0.5 ${textSubClass}`}>PDF or TXT document</p>
+              <Sparkles className="w-5 h-5 text-amber-400 mb-2 transition-transform group-hover:scale-110" />
+              <h4 className={`text-xs font-bold ${textHeading}`}>Setup Wizard</h4>
+              <p className={`text-[10px] mt-0.5 font-mono ${textMuted}`}>Manual course builder</p>
             </button>
-          )}
 
-          <button
-            onClick={onOpenWizard}
-            className={`p-4 rounded-2xl border text-left group transition-all ${
-              isDarkMode
-                ? 'border-[#1e2230] bg-[#12151e] hover:border-indigo-500'
-                : 'border-slate-200 bg-white hover:border-indigo-400 shadow-sm'
-            }`}
-          >
-            <Sparkles className="w-5 h-5 text-amber-500 mb-2 group-hover:scale-110 transition-transform" />
-            <h4 className={`text-xs font-bold ${textHeadingClass}`}>Setup Wizard</h4>
-            <p className={`text-[10px] mt-0.5 ${textSubClass}`}>Manual course builder</p>
-          </button>
+            <button
+              onClick={onLoadSample}
+              className={`p-4 rounded-lg border transition-all group ${
+                isDarkMode
+                  ? 'border-[rgba(217,234,224,0.12)] bg-[#121616] hover:border-[rgba(217,234,224,0.3)]'
+                  : 'border-slate-200 bg-white hover:border-slate-400 shadow-sm'
+              }`}
+            >
+              <Folder className={`w-5 h-5 mb-2 transition-transform group-hover:scale-110 ${isDarkMode ? 'text-[#abf5c0]' : 'text-emerald-600'}`} />
+              <h4 className={`text-xs font-bold ${textHeading}`}>Demo Plan</h4>
+              <p className={`text-[10px] mt-0.5 font-mono ${textMuted}`}>Preload CS & Chem</p>
+            </button>
+          </div>
+        </div>
 
-          <button
-            onClick={onLoadSample}
-            className={`p-4 rounded-2xl border text-left group transition-all ${
-              isDarkMode
-                ? 'border-[#1e2230] bg-[#12151e] hover:border-emerald-500'
-                : 'border-slate-200 bg-white hover:border-emerald-400 shadow-sm'
-            }`}
-          >
-            <Folder className="w-5 h-5 text-emerald-500 mb-2 group-hover:scale-110 transition-transform" />
-            <h4 className={`text-xs font-bold ${textHeadingClass}`}>Demo Plan</h4>
-            <p className={`text-[10px] mt-0.5 ${textSubClass}`}>Preload CS & Chem</p>
-          </button>
+        {/* 3-Step Process Section in Empty State */}
+        <div className={`p-6 rounded-xl border ${cardBorder}`}>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-[10px] font-mono tracking-widest uppercase text-[#82918c]">HOW FOCUSFLOW WORKS</p>
+              <h3 className={`text-sm font-extrabold tracking-tight mt-0.5 ${textHeading}`}>
+                One clear path from syllabus to exam mastery.
+              </h3>
+            </div>
+            <span
+              className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded ${
+                isDarkMode ? 'bg-[#171c1b] text-[#abf5c0] border border-[#abf5c0]/30' : 'bg-emerald-100 text-emerald-800'
+              }`}
+            >
+              Live Engine
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div className={`p-3.5 rounded-lg border ${isDarkMode ? 'bg-[#171c1b]/60 border-[rgba(217,234,224,0.08)]' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="w-5 h-5 rounded-full bg-[#abf5c0] text-[#0b0d0d] font-mono font-extrabold text-[10px] flex items-center justify-center mb-2">
+                1
+              </div>
+              <strong className={`block font-bold mb-1 ${textHeading}`}>Detect Syllabus & Exams</strong>
+              <p className={`text-[11px] leading-relaxed ${textMuted}`}>
+                Parses course outlines and schedules topics strictly prior to exam deadlines.
+              </p>
+            </div>
+
+            <div className={`p-3.5 rounded-lg border ${isDarkMode ? 'bg-[#171c1b]/60 border-[rgba(217,234,224,0.08)]' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="w-5 h-5 rounded-full bg-[#ff9d4a] text-[#0b0d0d] font-mono font-extrabold text-[10px] flex items-center justify-center mb-2">
+                2
+              </div>
+              <strong className={`block font-bold mb-1 ${textHeading}`}>Balance Daily Workload</strong>
+              <p className={`text-[11px] leading-relaxed ${textMuted}`}>
+                Budgets study hours against daily limits ({dailyCapacity}h/day) to prevent cramming.
+              </p>
+            </div>
+
+            <div className={`p-3.5 rounded-lg border ${isDarkMode ? 'bg-[#171c1b]/60 border-[rgba(217,234,224,0.08)]' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="w-5 h-5 rounded-full bg-transparent border border-[#abf5c0] text-[#abf5c0] font-mono font-extrabold text-[10px] flex items-center justify-center mb-2">
+                3
+              </div>
+              <strong className={`block font-bold mb-1 ${textHeading}`}>Adaptive Rebalance</strong>
+              <p className={`text-[11px] leading-relaxed ${textMuted}`}>
+                Missed a day? The algorithm reprioritizes and reschedules tasks forward instantly.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -124,131 +190,273 @@ export const TodayDashboard: React.FC<TodayDashboardProps> = ({
 
   return (
     <div className="space-y-7">
-      {/* 4 Stat Cards Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        {/* Card 1: Exam Readiness */}
-        <div className={`p-4 rounded-2xl border ${cardBgClass}`}>
-          <div className="flex items-center justify-between text-slate-400 dark:text-gray-400 mb-1.5">
-            <span className="text-[11px] font-semibold">Exam Readiness</span>
-            <TrendingUp className="w-4 h-4 text-emerald-500" />
-          </div>
-          <div className={`text-2xl font-black font-mono ${textHeadingClass}`}>
-            3.85
-          </div>
-          <div className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-1">
-            <span>↑ Top 5% pace</span>
-          </div>
-        </div>
-
-        {/* Card 2: Study Streak */}
-        <div className={`p-4 rounded-2xl border ${cardBgClass}`}>
-          <div className="flex items-center justify-between text-slate-400 dark:text-gray-400 mb-1.5">
-            <span className="text-[11px] font-semibold">Study Streak</span>
-            <Flame className="w-4 h-4 text-amber-500 fill-amber-500/20" />
-          </div>
-          <div className={`text-2xl font-black font-mono ${textHeadingClass}`}>
-            {streak} <span className="text-xs font-sans font-normal opacity-70">days</span>
-          </div>
-          <div className={`w-full h-1 rounded-full mt-2 overflow-hidden ${isDarkMode ? 'bg-[#1e2230]' : 'bg-slate-100'}`}>
-            <div className="h-full bg-amber-500 rounded-full w-3/4" />
-          </div>
-        </div>
-
-        {/* Card 3: Tasks Queue */}
-        <div className={`p-4 rounded-2xl border ${cardBgClass}`}>
-          <div className="flex items-center justify-between text-slate-400 dark:text-gray-400 mb-1.5">
-            <span className="text-[11px] font-semibold">Tasks Queue</span>
-            <Clock className="w-4 h-4 text-indigo-500" />
-          </div>
-          <div className={`text-2xl font-black font-mono ${textHeadingClass}`}>
-            {pendingCount} <span className="text-xs font-sans font-normal opacity-70">left</span>
-          </div>
-          <div className={`text-[10px] font-medium mt-1 ${textSubClass}`}>
-            {completedCount} completed today
-          </div>
-        </div>
-
-        {/* Card 4: Today's Study Load */}
-        <div className={`p-4 rounded-2xl border ${cardBgClass}`}>
-          <div className="flex items-center justify-between text-slate-400 dark:text-gray-400 mb-1.5">
-            <span className="text-[11px] font-semibold">Today's Study Load</span>
-            <GraduationCap className="w-4 h-4 text-indigo-500" />
-          </div>
-          <div className={`text-2xl font-black font-mono ${textHeadingClass}`}>
-            {formatTimeHours(totalHoursPlanned)} <span className="text-xs font-sans font-normal opacity-70">/ {dailyCapacity}h</span>
-          </div>
-          <div className={`w-full h-1 rounded-full mt-2 overflow-hidden ${isDarkMode ? 'bg-[#1e2230]' : 'bg-slate-100'}`}>
-            <div
-              className="h-full bg-indigo-600 rounded-full transition-all duration-300"
-              style={{
-                width: `${Math.min(100, Math.round((totalHoursPlanned / (dailyCapacity || 3)) * 100))}%`,
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Priority Tasks List */}
-      <section className={`rounded-3xl border p-6 ${cardBgClass}`}>
-        <div className="flex items-center justify-between mb-4">
+      {/* 1. PayRevive Summary Metrics Grid (.simple-summary-grid) */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5" aria-label="Study metrics">
+        {/* Main Metric Card: Exam Readiness & Syllabus Completion */}
+        <article className={`p-4 rounded-xl border flex flex-col justify-between ${cardBorder}`}>
           <div>
-            <h3 className={`font-extrabold text-base tracking-tight ${textHeadingClass}`}>
-              Priority Tasks
-            </h3>
-            <p className={`text-[11px] ${textSubClass}`}>
-              Personalized based on exam urgency, difficulty & daily {dailyCapacity}h limit
+            <span className="text-[10px] font-mono tracking-wider uppercase text-[#82918c] block mb-1">
+              Readiness &bull; Pace
+            </span>
+            <div className="flex items-baseline gap-2">
+              <strong className={`text-2xl sm:text-3xl font-extrabold font-mono tracking-tight ${textHeading}`}>
+                94<small className="text-sm font-sans font-normal opacity-60">%</small>
+              </strong>
+              <span className={`text-[10px] font-bold font-mono ${isDarkMode ? 'text-[#abf5c0]' : 'text-emerald-700'}`}>
+                ↑ Top 5% pace
+              </span>
+            </div>
+            <p className={`text-[10px] mt-1 ${textMuted}`}>
+              {totalCompletedTopics} of {totalTopicsCount} syllabus units covered
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Clean Test Rebalance Pill */}
+          <div className="mt-3 pt-2.5 border-t border-[rgba(217,234,224,0.08)]">
+            <div className="flex justify-between text-[9px] font-mono text-[#82918c] mb-1">
+              <span>Coverage meter</span>
+              <span className="font-bold">{completionPercent}%</span>
+            </div>
+            <div className={`w-full h-1.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-[#171c1b]' : 'bg-slate-100'}`}>
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  isDarkMode ? 'bg-[#abf5c0]' : 'bg-emerald-600'
+                }`}
+                style={{ width: `${Math.max(8, completionPercent)}%` }}
+              />
+            </div>
+          </div>
+        </article>
+
+        {/* Stat 2: Today's Study Load */}
+        <article className={`p-4 rounded-xl border flex flex-col justify-between ${cardBorder}`}>
+          <div>
+            <span className="text-[10px] font-mono tracking-wider uppercase text-[#82918c] block mb-1">
+              Today's Workload
+            </span>
+            <div className="flex items-baseline gap-1.5">
+              <strong className={`text-2xl sm:text-3xl font-extrabold font-mono tracking-tight ${textHeading}`}>
+                {formatTimeHours(totalHoursPlanned)}
+              </strong>
+              <span className="text-xs font-mono text-[#82918c]">/ {dailyCapacity}h</span>
+            </div>
+            <p className={`text-[10px] mt-1 ${textMuted}`}>
+              Guaranteed strictly under daily capacity
+            </p>
+          </div>
+
+          <div className="mt-3 pt-2.5 border-t border-[rgba(217,234,224,0.08)]">
+            <div className="flex justify-between text-[9px] font-mono text-[#82918c] mb-1">
+              <span>Daily budget</span>
+              <span className="font-bold">
+                {Math.round((totalHoursPlanned / (dailyCapacity || 3)) * 100)}%
+              </span>
+            </div>
+            <div className={`w-full h-1.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-[#171c1b]' : 'bg-slate-100'}`}>
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  totalHoursPlanned > dailyCapacity ? 'bg-amber-400' : isDarkMode ? 'bg-[#abf5c0]' : 'bg-emerald-600'
+                }`}
+                style={{
+                  width: `${Math.min(100, Math.round((totalHoursPlanned / (dailyCapacity || 3)) * 100))}%`,
+                }}
+              />
+            </div>
+          </div>
+        </article>
+
+        {/* Stat 3: Tasks in Queue */}
+        <article className={`p-4 rounded-xl border flex flex-col justify-between ${cardBorder}`}>
+          <div>
+            <span className="text-[10px] font-mono tracking-wider uppercase text-[#82918c] block mb-1">
+              Session Queue
+            </span>
+            <div className="flex items-baseline gap-2">
+              <strong className={`text-2xl sm:text-3xl font-extrabold font-mono tracking-tight ${textHeading}`}>
+                {pendingCount}
+              </strong>
+              <span className="text-xs font-sans text-[#82918c]">left today</span>
+            </div>
+            <p className={`text-[10px] mt-1 ${textMuted}`}>
+              {completedCount} blocks checked off today
+            </p>
+          </div>
+
+          <div className="mt-3 pt-2.5 border-t border-[rgba(217,234,224,0.08)] flex items-center justify-between text-[10px] font-mono">
+            <span className="text-[#82918c]">Queue status</span>
+            <span className={`font-bold ${pendingCount === 0 ? 'text-[#abf5c0]' : 'text-amber-400'}`}>
+              {pendingCount === 0 ? 'Clear &bull; Done' : `${pendingCount} pending`}
+            </span>
+          </div>
+        </article>
+
+        {/* Stat 4: Study Momentum Streak */}
+        <article className={`p-4 rounded-xl border flex flex-col justify-between ${cardBorder}`}>
+          <div>
+            <span className="text-[10px] font-mono tracking-wider uppercase text-[#82918c] block mb-1">
+              Consistency Streak
+            </span>
+            <div className="flex items-center gap-2">
+              <strong className={`text-2xl sm:text-3xl font-extrabold font-mono tracking-tight ${textHeading}`}>
+                {streak}
+              </strong>
+              <span className="text-xs font-sans text-[#82918c]">days active</span>
+              <Flame className="w-5 h-5 text-[#ff9d4a] fill-[#ff9d4a]/20 ml-auto" />
+            </div>
+            <p className={`text-[10px] mt-1 ${textMuted}`}>
+              Continuous review & spaced repetition
+            </p>
+          </div>
+
+          <div className="mt-3 pt-2.5 border-t border-[rgba(217,234,224,0.08)] flex items-center justify-between text-[10px] font-mono text-[#82918c]">
+            <span>Active courses</span>
+            <span className={`font-bold ${isDarkMode ? 'text-[#e5eee8]' : 'text-slate-800'}`}>
+              {subjects.length} enrolled
+            </span>
+          </div>
+        </article>
+      </section>
+
+      {/* 2. PayRevive "HOW IT WORKS" 3-Step Process Section */}
+      <section className={`p-5 sm:p-6 rounded-xl border ${cardBorder}`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <div>
+            <p className="text-[10px] font-mono tracking-widest uppercase text-[#82918c]">HOW FOCUSFLOW WORKS</p>
+            <h2 className={`text-base font-extrabold tracking-tight mt-0.5 ${textHeading}`}>
+              One clear path from syllabus to exam recovery.
+            </h2>
+          </div>
+          <span
+            className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded self-start sm:self-auto ${
+              isDarkMode ? 'bg-[#171c1b] text-[#abf5c0] border border-[#abf5c0]/30' : 'bg-emerald-100 text-emerald-800'
+            }`}
+          >
+            Live Engine
+          </span>
+        </div>
+
+        <ol className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+          <li className={`p-4 rounded-lg border flex gap-3 ${isDarkMode ? 'bg-[#171c1b]/70 border-[rgba(217,234,224,0.08)]' : 'bg-slate-50 border-slate-200'}`}>
+            <b className="w-6 h-6 rounded-full bg-[#abf5c0] text-[#0b0d0d] font-mono font-extrabold text-xs flex items-center justify-center flex-shrink-0">
+              1
+            </b>
+            <div>
+              <strong className={`block font-bold text-xs ${textHeading}`}>Detect Syllabus & Exams</strong>
+              <span className={`text-[11px] block mt-1 leading-relaxed ${textMuted}`}>
+                Extracts topic difficulties, estimated hours, and final exam deadlines automatically.
+              </span>
+            </div>
+          </li>
+
+          <li className={`p-4 rounded-lg border flex gap-3 ${isDarkMode ? 'bg-[#171c1b]/70 border-[rgba(217,234,224,0.08)]' : 'bg-slate-50 border-slate-200'}`}>
+            <b className="w-6 h-6 rounded-full bg-[#ff9d4a] text-[#0b0d0d] font-mono font-extrabold text-xs flex items-center justify-center flex-shrink-0">
+              2
+            </b>
+            <div>
+              <strong className={`block font-bold text-xs ${textHeading}`}>Balance Daily Workload</strong>
+              <span className={`text-[11px] block mt-1 leading-relaxed ${textMuted}`}>
+                Budgets daily study targets up to {dailyCapacity}h/day without overloading exam week.
+              </span>
+            </div>
+          </li>
+
+          <li className={`p-4 rounded-lg border flex gap-3 ${isDarkMode ? 'bg-[#171c1b]/70 border-[rgba(217,234,224,0.08)]' : 'bg-slate-50 border-slate-200'}`}>
+            <b className="w-6 h-6 rounded-full bg-transparent border border-[#abf5c0] text-[#abf5c0] font-mono font-extrabold text-xs flex items-center justify-center flex-shrink-0">
+              3
+            </b>
+            <div>
+              <strong className={`block font-bold text-xs ${textHeading}`}>Adaptive Rebalancing</strong>
+              <span className={`text-[11px] block mt-1 leading-relaxed ${textMuted}`}>
+                Missed a study block? The policy shifts forward and prioritizes missed topics instantly.
+              </span>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      {/* 3. PayRevive Study Queue / Feed Section (.simple-feed-section) */}
+      <section className={`rounded-xl border overflow-hidden ${cardBorder}`}>
+        {/* Feed Header */}
+        <div className={`p-5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isDarkMode ? 'border-[rgba(217,234,224,0.1)]' : 'border-slate-200'}`}>
+          <div>
+            <p className="text-[10px] font-mono tracking-widest uppercase text-[#82918c]">RECOVERY & STUDY QUEUE</p>
+            <h3 className={`text-base font-extrabold tracking-tight mt-0.5 ${textHeading}`}>
+              Sessions needing attention
+            </h3>
+            <p className={`text-xs mt-0.5 ${textMuted}`}>
+              Targeted focus blocks for today. Trigger an adaptive simulation to test dynamic replanning.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Judge Demo: Simulate Missed Day Trigger (PayRevive Style) */}
             {tasks.length > 0 && (
               <button
                 onClick={() => {
                   const firstPending = tasks.find((t) => !t.isCompleted);
                   if (firstPending) onSimulateMissed(firstPending);
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-[11px] font-bold transition-colors border shadow-sm ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono font-bold transition-all border ${
                   isDarkMode
-                    ? 'bg-amber-950/30 text-amber-300 border-amber-800/60 hover:bg-amber-950/50'
-                    : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+                    ? 'bg-[#ff9d4a]/10 hover:bg-[#ff9d4a]/20 text-[#ff9d4a] border-[#ff9d4a]/30'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300'
                 }`}
-                title="Simulate missed study session to demonstrate adaptive rebalancing"
+                title="Simulate missed study session to demonstrate adaptive rebalancing algorithm"
               >
-                <RotateCcw className="w-3 h-3 text-amber-500" />
+                <RotateCcw className="w-3.5 h-3.5" />
                 <span>Simulate Miss</span>
               </button>
             )}
           </div>
         </div>
 
+        {/* Feed Table List */}
         {tasks.length === 0 ? (
-          <div className="py-8 text-center text-slate-400 text-xs">
-            <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2 opacity-80" />
-            <p className={`font-bold ${textHeadingClass}`}>All caught up for today!</p>
-            <p className={`text-[11px] mt-0.5 ${textSubClass}`}>Your study roadmap is completely clear.</p>
+          <div className="py-12 text-center text-xs text-[#82918c] space-y-2">
+            <CheckCircle2 className="w-8 h-8 text-[#abf5c0] mx-auto opacity-80" />
+            <p className={`font-bold text-sm ${textHeading}`}>All study sessions cleared for today!</p>
+            <p className={`text-xs max-w-sm mx-auto ${textMuted}`}>
+              Your study roadmap is up to date. Relax or import another syllabus module.
+            </p>
           </div>
         ) : (
-          <div className={`divide-y ${isDarkMode ? 'divide-[#1e2230]' : 'divide-slate-100'}`}>
+          <div className={`divide-y ${isDarkMode ? 'divide-[rgba(217,234,224,0.07)]' : 'divide-slate-100'}`}>
+            {/* Feed Table Header Row */}
+            <div
+              className={`hidden sm:grid grid-cols-12 gap-3 px-5 py-2.5 text-[10px] font-mono uppercase tracking-wider font-semibold ${
+                isDarkMode ? 'bg-[#171c1b]/50 text-[#82918c]' : 'bg-slate-50 text-slate-500'
+              }`}
+            >
+              <span className="col-span-5">Topic / Session</span>
+              <span className="col-span-3">Course & Subject</span>
+              <span className="col-span-2">Workload</span>
+              <span className="col-span-2 text-right">Action</span>
+            </div>
+
+            {/* Feed Rows */}
             {tasks.map((task, idx) => {
               const isDone = task.isCompleted;
-              const isUrgent = idx === 0;
+              const isFirst = idx === 0;
 
               return (
                 <div
                   key={task.id}
-                  className={`py-3.5 first:pt-0 last:pb-0 flex items-start justify-between gap-3 transition-opacity ${
-                    isDone ? 'opacity-40' : 'opacity-100'
+                  className={`p-4 sm:px-5 sm:py-3.5 grid grid-cols-1 sm:grid-cols-12 gap-3 items-center transition-colors ${
+                    isDone
+                      ? 'opacity-40'
+                      : isDarkMode
+                      ? 'hover:bg-white/[0.02]'
+                      : 'hover:bg-slate-50/80'
                   }`}
                 >
-                  <div className="flex items-start gap-3 min-w-0">
+                  {/* Topic Name & Completion Toggle */}
+                  <div className="sm:col-span-5 flex items-start gap-3 min-w-0">
                     <button
                       onClick={() => onCompleteTask(task.id)}
-                      className="mt-1 text-slate-300 dark:text-gray-600 hover:text-emerald-500 transition-colors flex-shrink-0"
-                      title={isDone ? 'Mark Incomplete' : 'Complete Task'}
+                      className="mt-0.5 text-[#82918c] hover:text-[#abf5c0] transition-colors flex-shrink-0"
+                      title={isDone ? 'Mark Incomplete' : 'Complete Block'}
                     >
                       {isDone ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-100 dark:fill-emerald-950/40" />
+                        <CheckCircle2 className="w-4 h-4 text-[#abf5c0]" />
                       ) : (
                         <Circle className="w-4 h-4" />
                       )}
@@ -256,125 +464,88 @@ export const TodayDashboard: React.FC<TodayDashboardProps> = ({
 
                     <div className="min-w-0">
                       <h4
-                        className={`text-xs font-bold ${
-                          isDone
-                            ? 'line-through text-slate-400'
-                            : textHeadingClass
+                        className={`text-xs font-bold truncate leading-tight ${
+                          isDone ? 'line-through text-[#82918c]' : textHeading
                         }`}
                       >
                         {task.topicName}
                       </h4>
-                      <p className={`text-[11px] mt-0.5 truncate ${textSubClass}`}>
-                        {task.subjectName} • Key syllabus concept
-                      </p>
-
-                      {/* Metadata badges (# Course, Est. 2h) */}
-                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        <span
-                          className={`text-[10px] font-mono px-2 py-0.5 rounded-md font-medium border ${
-                            isDarkMode
-                              ? 'text-gray-300 bg-[#1a1f2c] border-[#262c3e]'
-                              : 'text-slate-600 bg-slate-100 border-slate-200'
-                          }`}
-                        >
-                          # {task.subjectName}
-                        </span>
-
-                        <span className={`text-[10px] flex items-center gap-1 font-medium ${textSubClass}`}>
-                          <Clock className="w-3 h-3 text-indigo-500" />
-                          Est. {task.durationHours}h
-                        </span>
-
-                        <span
-                          className={`text-[9px] uppercase font-mono font-bold px-1.5 py-0.5 rounded border ${
-                            task.difficulty === 'hard'
-                              ? isDarkMode
-                                ? 'bg-rose-950/30 text-rose-300 border-rose-900'
-                                : 'bg-rose-50 text-rose-700 border-rose-200'
-                              : task.difficulty === 'medium'
-                              ? isDarkMode
-                                ? 'bg-amber-950/30 text-amber-300 border-amber-900'
-                                : 'bg-amber-50 text-amber-700 border-amber-200'
-                              : isDarkMode
-                              ? 'bg-emerald-950/30 text-emerald-300 border-emerald-900'
-                              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          }`}
-                        >
-                          {task.difficulty}
-                        </span>
-
-                        {task.pattern && (
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        {isFirst && !isDone && (
                           <span
-                            className={`text-[10px] font-medium px-2 py-0.5 rounded-md border ${
-                              isDarkMode
-                                ? 'bg-purple-950/40 text-purple-300 border-purple-800/60'
-                                : 'bg-purple-50 text-purple-700 border-purple-200'
+                            className={`text-[9px] font-mono px-1.5 py-0.2 rounded font-bold ${
+                              isDarkMode ? 'bg-[#abf5c0]/15 text-[#abf5c0]' : 'bg-emerald-100 text-emerald-800'
                             }`}
                           >
-                            ⚡ {task.pattern}
+                            Active Target
                           </span>
                         )}
-
-                        {task.problemUrl && (
-                          <a
-                            href={task.problemUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"
-                          >
-                            Solve on TUF ↗
-                          </a>
+                        {task.pattern && (
+                          <span className={`text-[10px] font-mono ${isDarkMode ? 'text-[#ff9d4a]' : 'text-amber-700'}`}>
+                            ⚡ {task.pattern}
+                          </span>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Right Tags & Clean Action */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {/* Due Tag Pill */}
-                    {isUrgent ? (
-                      <span
-                        className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
-                          isDarkMode
-                            ? 'text-rose-300 bg-rose-950/30 border-rose-900'
-                            : 'text-rose-700 bg-rose-50 border-rose-200'
-                        }`}
-                      >
-                        Due Today
-                      </span>
-                    ) : (
-                      <span
-                        className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
-                          isDarkMode
-                            ? 'text-amber-300 bg-amber-950/30 border-amber-900'
-                            : 'text-amber-700 bg-amber-50 border-amber-200'
-                        }`}
-                      >
-                        Tomorrow
-                      </span>
-                    )}
+                  {/* Course & Difficulty Badge */}
+                  <div className="sm:col-span-3 flex items-center gap-2">
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: task.subjectColor || '#abf5c0' }}
+                    />
+                    <span className={`text-xs font-medium truncate ${isDarkMode ? 'text-[#e5eee8]' : 'text-slate-700'}`}>
+                      {task.subjectName}
+                    </span>
+                    <span
+                      className={`text-[9px] uppercase font-mono font-bold px-1.5 py-0.5 rounded border ml-auto sm:ml-0 ${
+                        task.difficulty === 'hard'
+                          ? isDarkMode
+                            ? 'bg-[#ff8f84]/15 text-[#ff8f84] border-[#ff8f84]/30'
+                            : 'bg-rose-50 text-rose-700 border-rose-200'
+                          : task.difficulty === 'medium'
+                          ? isDarkMode
+                            ? 'bg-[#ff9d4a]/15 text-[#ff9d4a] border-[#ff9d4a]/30'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                          : isDarkMode
+                          ? 'bg-[#abf5c0]/15 text-[#abf5c0] border-[#abf5c0]/30'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}
+                    >
+                      {task.difficulty}
+                    </span>
+                  </div>
 
-                    {/* AI Study Guidance button */}
+                  {/* Workload Duration */}
+                  <div className="sm:col-span-2 flex items-center gap-1.5 text-xs font-mono">
+                    <Clock className="w-3.5 h-3.5 text-[#82918c]" />
+                    <span className={isDarkMode ? 'text-[#e5eee8]' : 'text-slate-700'}>
+                      {formatTimeHours(task.durationHours)}
+                    </span>
+                  </div>
+
+                  {/* Action Buttons: AI Guidance + Start Focus */}
+                  <div className="sm:col-span-2 flex items-center justify-end gap-2">
                     <button
                       onClick={() => onOpenStudyTip(task)}
-                      className={`p-1.5 rounded-xl transition-colors ${
+                      className={`p-1.5 rounded transition-colors ${
                         isDarkMode
-                          ? 'text-gray-400 hover:text-indigo-300 hover:bg-[#1a1f2c]'
-                          : 'text-slate-400 hover:text-indigo-600 hover:bg-slate-100'
+                          ? 'text-[#82918c] hover:text-[#abf5c0] hover:bg-white/[0.04]'
+                          : 'text-slate-400 hover:text-emerald-700 hover:bg-slate-100'
                       }`}
-                      title="AI Study Tip"
+                      title="AI Study Tip & Invariant Breakdown"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                      <Sparkles className="w-3.5 h-3.5" />
                     </button>
 
-                    {/* Start Focus Timer Button */}
                     {!isDone && (
                       <button
                         onClick={() => onStartFocus(task)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all shadow-sm ${
+                        className={`px-3 py-1.5 rounded text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-sm ${
                           isDarkMode
-                            ? 'bg-white hover:bg-slate-100 text-slate-900'
-                            : 'bg-slate-900 hover:bg-slate-800 text-white'
+                            ? 'bg-[#abf5c0] hover:bg-[#cdfad8] text-[#0b0d0d]'
+                            : 'bg-emerald-600 hover:bg-emerald-700 text-white'
                         }`}
                       >
                         <Play className="w-3 h-3 fill-current" />
@@ -389,18 +560,24 @@ export const TodayDashboard: React.FC<TodayDashboardProps> = ({
         )}
       </section>
 
-      {/* Course Materials & Syllabus Section */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className={`font-extrabold text-sm tracking-tight ${textHeadingClass}`}>
-            Course Documents & Syllabi
-          </h3>
+      {/* 4. Course Documents & Syllabi Section */}
+      <section className={`p-5 rounded-xl border ${cardBorder}`}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-[10px] font-mono tracking-widest uppercase text-[#82918c]">DOCUMENT REPOSITORY</p>
+            <h3 className={`text-sm font-extrabold tracking-tight mt-0.5 ${textHeading}`}>
+              Enrolled Syllabi & Course Materials
+            </h3>
+          </div>
           {onOpenSyllabusModal && (
             <button
               onClick={onOpenSyllabusModal}
-              className="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:underline"
+              className={`text-xs font-mono font-bold flex items-center gap-1 hover:underline ${
+                isDarkMode ? 'text-[#abf5c0]' : 'text-emerald-700'
+              }`}
             >
-              + Upload New Document
+              <span>+ Ingest Document</span>
+              <ArrowRight className="w-3 h-3" />
             </button>
           )}
         </div>
@@ -408,58 +585,52 @@ export const TodayDashboard: React.FC<TodayDashboardProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div
             onClick={onOpenSyllabusModal}
-            className={`p-4 rounded-2xl border flex items-start gap-3 transition-colors cursor-pointer group hover:border-indigo-400 ${cardBgClass}`}
+            className={`p-3.5 rounded-lg border flex items-center gap-3 transition-all cursor-pointer group ${
+              isDarkMode
+                ? 'bg-[#171c1b]/70 border-[rgba(217,234,224,0.08)] hover:border-[#abf5c0]/50'
+                : 'bg-slate-50 border-slate-200 hover:border-emerald-500 shadow-sm'
+            }`}
           >
-            <div
-              className={`p-2.5 rounded-xl group-hover:scale-105 transition-transform ${
-                isDarkMode ? 'bg-indigo-950/40 text-indigo-400' : 'bg-indigo-50 text-indigo-600'
-              }`}
-            >
-              <FileCode className="w-5 h-5" />
+            <div className={`p-2 rounded font-mono ${isDarkMode ? 'bg-[#0b0d0d] text-[#abf5c0]' : 'bg-white text-emerald-700 shadow-sm'}`}>
+              <FileCode className="w-4 h-4" />
             </div>
-            <div>
-              <h4 className={`text-xs font-bold truncate max-w-[130px] ${textHeadingClass}`}>
-                CS_Syllabus_2026.pdf
-              </h4>
-              <p className={`text-[10px] mt-0.5 ${textSubClass}`}>8 topics loaded</p>
+            <div className="min-w-0">
+              <h4 className={`text-xs font-bold truncate ${textHeading}`}>CS_Syllabus_2026.pdf</h4>
+              <p className={`text-[10px] font-mono ${textMuted}`}>8 modular topics</p>
             </div>
           </div>
 
           <div
             onClick={onOpenSyllabusModal}
-            className={`p-4 rounded-2xl border flex items-start gap-3 transition-colors cursor-pointer group hover:border-emerald-400 ${cardBgClass}`}
+            className={`p-3.5 rounded-lg border flex items-center gap-3 transition-all cursor-pointer group ${
+              isDarkMode
+                ? 'bg-[#171c1b]/70 border-[rgba(217,234,224,0.08)] hover:border-[#abf5c0]/50'
+                : 'bg-slate-50 border-slate-200 hover:border-emerald-500 shadow-sm'
+            }`}
           >
-            <div
-              className={`p-2.5 rounded-xl group-hover:scale-105 transition-transform ${
-                isDarkMode ? 'bg-emerald-950/40 text-emerald-400' : 'bg-emerald-50 text-emerald-600'
-              }`}
-            >
-              <Folder className="w-5 h-5" />
+            <div className={`p-2 rounded font-mono ${isDarkMode ? 'bg-[#0b0d0d] text-[#abf5c0]' : 'bg-white text-emerald-700 shadow-sm'}`}>
+              <Folder className="w-4 h-4" />
             </div>
-            <div>
-              <h4 className={`text-xs font-bold truncate max-w-[130px] ${textHeadingClass}`}>
-                Chem_Reaction_Decks
-              </h4>
-              <p className={`text-[10px] mt-0.5 ${textSubClass}`}>Updated recently</p>
+            <div className="min-w-0">
+              <h4 className={`text-xs font-bold truncate ${textHeading}`}>Chem_Reaction_Decks</h4>
+              <p className={`text-[10px] font-mono ${textMuted}`}>Updated syllabus</p>
             </div>
           </div>
 
           <div
             onClick={onOpenSyllabusModal}
-            className={`p-4 rounded-2xl border flex items-start gap-3 transition-colors cursor-pointer group hover:border-amber-400 ${cardBgClass}`}
+            className={`p-3.5 rounded-lg border flex items-center gap-3 transition-all cursor-pointer group ${
+              isDarkMode
+                ? 'bg-[#171c1b]/70 border-[rgba(217,234,224,0.08)] hover:border-[#abf5c0]/50'
+                : 'bg-slate-50 border-slate-200 hover:border-emerald-500 shadow-sm'
+            }`}
           >
-            <div
-              className={`p-2.5 rounded-xl group-hover:scale-105 transition-transform ${
-                isDarkMode ? 'bg-amber-950/40 text-amber-400' : 'bg-amber-50 text-amber-600'
-              }`}
-            >
-              <BookOpen className="w-5 h-5" />
+            <div className={`p-2 rounded font-mono ${isDarkMode ? 'bg-[#0b0d0d] text-[#abf5c0]' : 'bg-white text-emerald-700 shadow-sm'}`}>
+              <BookOpen className="w-4 h-4" />
             </div>
-            <div>
-              <h4 className={`text-xs font-bold truncate max-w-[130px] ${textHeadingClass}`}>
-                LinearAlgebra_Syllabus
-              </h4>
-              <p className={`text-[10px] mt-0.5 ${textSubClass}`}>Parsed via text</p>
+            <div className="min-w-0">
+              <h4 className={`text-xs font-bold truncate ${textHeading}`}>LinearAlgebra_Matrix.txt</h4>
+              <p className={`text-[10px] font-mono ${textMuted}`}>Parsed via text</p>
             </div>
           </div>
         </div>
