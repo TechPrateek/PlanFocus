@@ -1,6 +1,7 @@
 # FocusFlow AI 🎯
 > **Smart, Adaptive Study Planner and Focus Companion for College Students**  
-> *Devpost Hackathon Submission — Build With AI: Basics*
+> *Devpost Hackathon Submission — Build With AI: Basics*  
+> 🌐 **Live Web Demo:** [https://focusflow-peach.vercel.app/](https://focusflow-peach.vercel.app/)
 
 ---
 
