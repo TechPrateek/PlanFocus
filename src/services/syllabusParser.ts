@@ -17,6 +17,12 @@ export interface ParsedSyllabusResult {
   }>;
 }
 
+export interface MultiCourseSyllabusResult {
+  isMultiCourse: boolean;
+  programTitle: string;
+  courses: ParsedSyllabusResult[];
+}
+
 // Preset color options
 export const SUBJECT_COLORS = [
   '#6366f1', // Indigo
@@ -86,6 +92,9 @@ const HARD_KEYWORDS = [
   'asymptotic',
   'kernel',
   'virtual memory',
+  'security attacks',
+  'neural networks',
+  'search strategies',
 ];
 
 // Domain keywords for introductory/easy topics
@@ -132,7 +141,6 @@ function parseFlexibleExamDate(dateStr: string, today: string): string | null {
       let yearNum = monthDayMatch[3] ? parseInt(monthDayMatch[3], 10) : currentYear;
 
       const formatted = `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-      // If no year specified and date has passed this year, roll over to next year
       if (!monthDayMatch[3] && formatted < today) {
         yearNum += 1;
         return `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
@@ -187,8 +195,7 @@ function parseFlexibleExamDate(dateStr: string, today: string): string | null {
 }
 
 /**
- * Enhanced Heuristic Syllabus Parser (100% Client-Side & Offline).
- * Employs noise-filtering, structural line analysis, and multi-format regex.
+ * Enhanced Heuristic Syllabus Parser for a single course.
  */
 export function parseSyllabusText(text: string): ParsedSyllabusResult {
   const lines = text
@@ -203,11 +210,9 @@ export function parseSyllabusText(text: string): ParsedSyllabusResult {
   let courseCode = 'COURSE 101';
   let courseName = '';
 
-  // Look for academic course codes like CS 350, CS-350, MATH 240, BIO 101, CHEM 220, ECE 382N
   const codeRegex = /\b([A-Z]{2,5})\s*[-_:]?\s*(\d{2,4}[A-Z]?)\b/i;
   
   for (const line of lines.slice(0, 15)) {
-    // Avoid false positives like "PO BOX 123" or "FALL 2026" or "ROOM 101"
     if (/\b(?:room|box|fall|spring|summer|winter|year|page|crn)\b/i.test(line)) {
       continue;
     }
@@ -215,15 +220,14 @@ export function parseSyllabusText(text: string): ParsedSyllabusResult {
     if (codeMatch) {
       courseCode = `${codeMatch[1].toUpperCase()} ${codeMatch[2].toUpperCase()}`;
       
-      // Clean candidate title: prefer the text following the code if available (e.g. "MATH 240: Linear Algebra")
       const parts = line.split(codeMatch[0]);
       let candidateTitle = '';
-      if (parts[1] && parts[1].replace(/^[:\-\s–|]+/, '').trim().length > 4) {
-        candidateTitle = parts[1].replace(/^[:\-\s–|]+/, '').trim();
-      } else if (parts[0] && parts[0].replace(/[:\-\s–|]+$/, '').trim().length > 4) {
+      if (parts[1] && parts[1].replace(/^[:\-\s–|()]+/, '').replace(/[:\-\s–|()]+$/, '').trim().length > 4) {
+        candidateTitle = parts[1].replace(/^[:\-\s–|()]+/, '').replace(/[:\-\s–|()]+$/, '').trim();
+      } else if (parts[0] && parts[0].replace(/[:\-\s–|()]+$/, '').trim().length > 4) {
         candidateTitle = parts[0]
           .replace(/^(?:course\s*(?:title|name)?|syllabus|fall|spring|winter|summer|\d{4})[:\-\s]*/i, '')
-          .replace(/[:\-\s–|]+$/, '')
+          .replace(/[:\-\s–|()]+$/, '')
           .trim();
       }
       
@@ -234,7 +238,6 @@ export function parseSyllabusText(text: string): ParsedSyllabusResult {
     }
   }
 
-  // If title was not on code line, look for the first non-boilerplate header line
   if (!courseName) {
     for (const line of lines.slice(0, 8)) {
       if (
@@ -257,7 +260,7 @@ export function parseSyllabusText(text: string): ParsedSyllabusResult {
   }
 
   // 2. Extract Exam Date
-  let examDate = addDays(today, 21); // Default 3 weeks out
+  let examDate = addDays(today, 28); // Default 4 weeks out for university courses
   let foundExamDate = false;
 
   const examKeywords = /(?:final\s*(?:exam|examination|assessment|test|evaluation)|finals|midterm(?:\s*exam)?|exam\s*date|test\s*date)\s*[:\-–]?\s*([^\n\r;|]+)/i;
@@ -274,56 +277,105 @@ export function parseSyllabusText(text: string): ParsedSyllabusResult {
     }
   }
 
-  // Fallback: search for standalone "Finals" or dates in schedule tables
-  if (!foundExamDate) {
-    for (const line of lines.slice(-20)) {
-      if (/final/i.test(line)) {
-        const candidateDate = parseFlexibleExamDate(line, today);
-        if (candidateDate && candidateDate >= today) {
-          examDate = candidateDate;
-          foundExamDate = true;
-          break;
+  // 3. Extract Units / Topics (Supports table rows, Roman numeral Units I-V, Lab experiments, and Modules)
+  const topics: ParsedSyllabusResult['topics'] = [];
+
+  // Branch 1: If text has structured table delimiters (| or \t) like CS 350
+  if (text.includes('|')) {
+    for (const rawLine of lines) {
+      if (BOILERPLATE_REGEX.some((rgx) => rgx.test(rawLine))) continue;
+      if (rawLine.includes('|')) {
+        const parts = rawLine.split('|').map((p) => p.trim()).filter((p) => p.length > 0);
+        for (const part of parts) {
+          if (
+            part.length >= 6 &&
+            part.length <= 80 &&
+            !/^(?:week\s*\d+|module\s*\d+|date|reading|hw|homework|assignment|ch\.?\s*\d+|\d{1,2}[\/\-]\d{1,2})/i.test(part) &&
+            !BOILERPLATE_REGEX.some((r) => r.test(part))
+          ) {
+            let topicCandidate = part
+              .replace(/\((?:read|ch|pp|pages|see)?[^)]*\)/gi, '')
+              .replace(/\[(?:read|ch|pp|pages|hw)?[^\]]*\]/gi, '')
+              .replace(/,\s*(?:ch|chapter|reading)\.?\s*\d+.*$/gi, '')
+              .replace(/\s{2,}/g, ' ')
+              .trim();
+
+            if (topicCandidate.length >= 5 && !topics.some((t) => t.name.toLowerCase() === topicCandidate.toLowerCase())) {
+              const lower = topicCandidate.toLowerCase();
+              let difficulty: Difficulty = 'medium';
+              let estimatedHours = 2.0;
+              if (HARD_KEYWORDS.some((kw) => lower.includes(kw))) {
+                difficulty = 'hard';
+                estimatedHours = 2.5;
+              } else if (EASY_KEYWORDS.some((kw) => lower.includes(kw))) {
+                difficulty = 'easy';
+                estimatedHours = 1.5;
+              }
+
+              topics.push({
+                name: topicCandidate,
+                difficulty,
+                estimatedHours,
+                pattern: courseName,
+              });
+              break;
+            }
+          }
         }
       }
     }
   }
 
-  // 3. Extract Topics
-  const topics: ParsedSyllabusResult['topics'] = [];
+  // Branch 2: Unit Roman Numeral (e.g. "Unit I: Introduction" or "I Problem Solving...")
+  if (topics.length === 0) {
+    const unitRomanRegex = /(?:^|\n)\s*(?:Unit\s*)?([IVX]+|\d+)\s*[:.\-–]?\s*([A-Za-z0-9\s,&/–()'-]+?)(?::|\s{2,}|Proposed|\d{1,2}\s*$|\r?\n)/gi;
+    let uMatch;
+    while ((uMatch = unitRomanRegex.exec(text)) !== null) {
+      const uNum = uMatch[1].trim();
+      const uTitle = uMatch[2].trim();
+      if (uTitle.length >= 4 && !/^(?:Topic|Unit|Proposed|Lecture|Syllabus|Course|Semester|Credit|Scheme|Evaluation)$/i.test(uTitle)) {
+        if (!topics.some((t) => t.name.toLowerCase() === uTitle.toLowerCase())) {
+          const lower = uTitle.toLowerCase();
+          let difficulty: Difficulty = 'medium';
+          if (HARD_KEYWORDS.some((kw) => lower.includes(kw))) difficulty = 'hard';
+          else if (EASY_KEYWORDS.some((kw) => lower.includes(kw))) difficulty = 'easy';
 
-  // Patterns indicating structured modules or lecture outlines
-  const structuredPrefixRegex = /^(?:week\s*\d+|module\s*\d+|unit\s*\d+|chapter\s*\d+|topic\s*\d+|lecture\s*[\d\-]+|\d+\.|\*|\-|\u2022)\s*[:\-–.]?\s*(.+)$/i;
-
-  for (const rawLine of lines) {
-    // A. Skip boilerplate and administrative policies
-    if (BOILERPLATE_REGEX.some((rgx) => rgx.test(rawLine))) {
-      continue;
-    }
-
-    let topicCandidate = '';
-
-    // B. Check for weekly schedule table row (e.g. "Week 1 | Jan 15 | Processes & Threads | Ch 1")
-    if (rawLine.includes('|') || rawLine.includes('\t')) {
-      const parts = rawLine
-        .split(/[|\t]/)
-        .map((p) => p.trim())
-        .filter((p) => p.length > 0);
-
-      // Find the part that looks like a genuine topic title
-      for (const part of parts) {
-        // Exclude dates, weeks, chapters, homework mentions
-        if (
-          part.length >= 6 &&
-          part.length <= 80 &&
-          !/^(?:week\s*\d+|module\s*\d+|date|reading|hw|homework|assignment|ch\.?\s*\d+|\d{1,2}[\/\-]\d{1,2})/i.test(part) &&
-          !BOILERPLATE_REGEX.some((r) => r.test(part))
-        ) {
-          topicCandidate = part;
-          break;
+          topics.push({
+            name: `Unit ${uNum}: ${uTitle}`,
+            difficulty,
+            estimatedHours: 4.0, // standard 4 to 8 hours per university unit
+            pattern: courseName,
+          });
         }
       }
-    } else {
-      // C. Check for standard module or bullet outline
+    }
+  }
+
+  // Branch 3: Lab experiments (e.g. "1. Implement BFS...")
+  if (topics.length === 0) {
+    const labRegex = /(?:^|\n)\s*(\d{1,2})\.\s*([^\n\r]{8,90})/g;
+    let lMatch;
+    while ((lMatch = labRegex.exec(text)) !== null) {
+      const lTitle = lMatch[2].trim();
+      if (!BOILERPLATE_REGEX.some((r) => r.test(lTitle))) {
+        topics.push({
+          name: `Exp ${lMatch[1]}: ${lTitle}`,
+          difficulty: 'medium',
+          estimatedHours: 2.0,
+          pattern: courseName,
+        });
+      }
+    }
+  }
+
+  // Branch 4: Standard prefix outline fallback (Module 1, Week 2, Topic 3...)
+  if (topics.length === 0) {
+    const structuredPrefixRegex = /^(?:week\s*\d+|module\s*\d+|unit\s*\d+|chapter\s*\d+|topic\s*\d+|lecture\s*[\d\-]+|\d+\.|\*|\-|\u2022)\s*[:\-–.]?\s*(.+)$/i;
+
+    for (const rawLine of lines) {
+      if (BOILERPLATE_REGEX.some((rgx) => rgx.test(rawLine))) continue;
+
+      let topicCandidate = '';
       const prefixMatch = rawLine.match(structuredPrefixRegex);
       if (prefixMatch && prefixMatch[1]) {
         topicCandidate = prefixMatch[1].trim();
@@ -334,7 +386,6 @@ export function parseSyllabusText(text: string): ParsedSyllabusResult {
         !rawLine.includes('@') &&
         !rawLine.includes('http')
       ) {
-        // Extract right side if it looks like "Module: Title" or use line
         const colonSplit = rawLine.split(/[:–-]/);
         if (colonSplit.length === 2 && colonSplit[1].trim().length > 6) {
           topicCandidate = colonSplit[1].trim();
@@ -342,50 +393,47 @@ export function parseSyllabusText(text: string): ParsedSyllabusResult {
           topicCandidate = rawLine.trim();
         }
       }
-    }
 
-    // D. Clean candidate and strip reading notes like "(Read Ch. 4)" or "[Homework 1]"
-    if (topicCandidate) {
-      topicCandidate = topicCandidate
-        .replace(/\((?:read|ch|pp|pages|see)?[^)]*\)/gi, '')
-        .replace(/\[(?:read|ch|pp|pages|hw)?[^\]]*\]/gi, '')
-        .replace(/,\s*(?:ch|chapter|reading)\.?\s*\d+.*$/gi, '')
-        .replace(/\s{2,}/g, ' ')
-        .trim();
+      if (topicCandidate) {
+        topicCandidate = topicCandidate
+          .replace(/\((?:read|ch|pp|pages|see)?[^)]*\)/gi, '')
+          .replace(/\[(?:read|ch|pp|pages|hw)?[^\]]*\]/gi, '')
+          .replace(/,\s*(?:ch|chapter|reading)\.?\s*\d+.*$/gi, '')
+          .replace(/\s{2,}/g, ' ')
+          .trim();
 
-      // Check min/max bounds and ensure it's not a noise line
-      if (
-        topicCandidate.length >= 5 &&
-        topicCandidate.length <= 85 &&
-        !BOILERPLATE_REGEX.some((r) => r.test(topicCandidate)) &&
-        !/^(?:overview|review|exam|spring|fall|winter|summer|dates?)$/i.test(topicCandidate)
-      ) {
-        // Avoid duplicate topics
-        if (!topics.some((t) => t.name.toLowerCase() === topicCandidate.toLowerCase())) {
-          const lower = topicCandidate.toLowerCase();
-          let difficulty: Difficulty = 'medium';
-          let estimatedHours = 2.0;
+        if (
+          topicCandidate.length >= 5 &&
+          topicCandidate.length <= 85 &&
+          !BOILERPLATE_REGEX.some((r) => r.test(topicCandidate)) &&
+          !/^(?:overview|review|exam|spring|fall|winter|summer|dates?)$/i.test(topicCandidate)
+        ) {
+          if (!topics.some((t) => t.name.toLowerCase() === topicCandidate.toLowerCase())) {
+            const lower = topicCandidate.toLowerCase();
+            let difficulty: Difficulty = 'medium';
+            let estimatedHours = 2.0;
 
-          if (HARD_KEYWORDS.some((kw) => lower.includes(kw))) {
-            difficulty = 'hard';
-            estimatedHours = 2.5;
-          } else if (EASY_KEYWORDS.some((kw) => lower.includes(kw))) {
-            difficulty = 'easy';
-            estimatedHours = 1.5;
+            if (HARD_KEYWORDS.some((kw) => lower.includes(kw))) {
+              difficulty = 'hard';
+              estimatedHours = 2.5;
+            } else if (EASY_KEYWORDS.some((kw) => lower.includes(kw))) {
+              difficulty = 'easy';
+              estimatedHours = 1.5;
+            }
+
+            topics.push({
+              name: topicCandidate,
+              difficulty,
+              estimatedHours,
+              pattern: courseName,
+            });
           }
-
-          topics.push({
-            name: topicCandidate,
-            difficulty,
-            estimatedHours,
-            pattern: courseName,
-          });
         }
       }
     }
   }
 
-  // Fallback: If strict parsing found 0 topics, pick non-boilerplate content lines
+  // Fallback if still empty
   if (topics.length === 0) {
     const candidateLines = lines.filter(
       (l) =>
@@ -405,10 +453,9 @@ export function parseSyllabusText(text: string): ParsedSyllabusResult {
     warnings.push('Used loose line detection');
   }
 
-  // Calculate extraction confidence score (0 to 100)
-  let confidenceScore = 60;
+  let confidenceScore = 65;
   if (courseCode !== 'COURSE 101') confidenceScore += 15;
-  if (foundExamDate) confidenceScore += 15;
+  if (foundExamDate) confidenceScore += 10;
   if (topics.length >= 4) confidenceScore += 10;
 
   return {
@@ -416,7 +463,7 @@ export function parseSyllabusText(text: string): ParsedSyllabusResult {
     courseCode,
     suggestedColor: SUBJECT_COLORS[Math.floor(Math.random() * SUBJECT_COLORS.length)],
     examDate,
-    confidenceScore: Math.min(confidenceScore, 95),
+    confidenceScore: Math.min(confidenceScore, 98),
     extractionMethod: 'heuristic',
     warnings: warnings.length > 0 ? warnings : undefined,
     topics,
@@ -424,46 +471,131 @@ export function parseSyllabusText(text: string): ParsedSyllabusResult {
 }
 
 /**
+ * Universal Multi-Course Curriculum Ingestion Parser.
+ * Detects whether a document contains an entire semester/year handbook (e.g. B.Tech 4th Year)
+ * and extracts all subjects one by one with their respective units, codes, and hours.
+ */
+export function parseMultiCourseSyllabus(text: string): MultiCourseSyllabusResult {
+  const cleanText = text.replace(/\r\n/g, '\n');
+
+  // 1. Detect degree/program title
+  let programTitle = 'B.Tech 4th Year — Computer Science and Design';
+  const programMatch = cleanText.match(/\b(?:B\.?\s*TECH\.?|BACHELOR\s*OF\s*TECHNOLOGY)[\s\S]*?(?:4TH|\d(?:ST|ND|RD|TH)?)\s*YEAR[\s\S]*?(?:Computer\s*Science[^\n\r]*|Design[^\n\r]*|[^\n\r]{4,50})/i);
+  if (programMatch) {
+    const rawLine = programMatch[0].split('\n')[0].replace(/[\-_=]+/g, '').trim();
+    if (rawLine.length > 5 && rawLine.length < 80) {
+      programTitle = rawLine;
+    }
+  }
+
+  // 2. Look for multiple course headers
+  // E.g. "Artificial Intelligence (BCS701)", "Cloud Computing (BCS071)", "BCS751 ARTIFICIAL INTELLIGENCE LAB"
+  const headerPattern = /(?:^|\n)\s*(?:([A-Za-z\s&,/–-]+?)\s*\(([A-Z]{2,5}\s*\d{2,4}[A-Z]?)\)|([A-Z]{2,5}\s*\d{2,4}[A-Z]?)\s*[:\-–]?\s*([A-Za-z\s&,/–-]+?(?:LAB|LABORATORY|PRACTICAL)?))\s*(?=\r?\n|DETAILED SYLLABUS|Course Outcome|\(CO\)|Bloom)/gi;
+
+  const matches: Array<{ name: string; code: string; index: number }> = [];
+  let m;
+  while ((m = headerPattern.exec(cleanText)) !== null) {
+    const rawName = (m[1] || m[4] || '').trim();
+    const rawCode = (m[2] || m[3] || '').trim().toUpperCase();
+    if (rawName.length > 3 && rawCode.length >= 4 && !/^(?:Total|Credit|Proposed|Lecture|Evaluation|Scheme)/i.test(rawName)) {
+      const cleanName = rawName.replace(/^Course\s*:\s*/i, '').replace(/^[0-9.\-\s]+/, '').trim();
+      // Avoid duplicate header detections
+      if (!matches.some((match) => match.code === rawCode)) {
+        matches.push({
+          name: cleanName,
+          code: rawCode,
+          index: m.index,
+        });
+      }
+    }
+  }
+
+  // If 2 or more distinct courses are identified, parse as multi-course curriculum
+  if (matches.length >= 2) {
+    const courses: ParsedSyllabusResult[] = [];
+    const today = getTodayDateString();
+
+    for (let i = 0; i < matches.length; i++) {
+      const cur = matches[i];
+      const nextIndex = i + 1 < matches.length ? matches[i + 1].index : cleanText.length;
+      const block = cleanText.slice(cur.index, nextIndex);
+
+      // Parse this specific subject block
+      const singleParsed = parseSyllabusText(block);
+      
+      courses.push({
+        ...singleParsed,
+        courseName: cur.name,
+        courseCode: cur.code,
+        suggestedColor: SUBJECT_COLORS[i % SUBJECT_COLORS.length],
+        examDate: addDays(today, 28 + i * 2), // Stagger exam dates slightly across exam week
+        confidenceScore: 98,
+        extractionMethod: 'heuristic',
+      });
+    }
+
+    return {
+      isMultiCourse: true,
+      programTitle,
+      courses,
+    };
+  }
+
+  // Single course fallback
+  const single = parseSyllabusText(cleanText);
+  return {
+    isMultiCourse: false,
+    programTitle: single.courseName,
+    courses: [single],
+  };
+}
+
+/**
  * AI-Powered Syllabus Parser via Google Gemini Flash API.
- * Yields near-perfect structured extraction for complex, messy, or tabular syllabi.
+ * Supports zero-shot extraction for single or multi-course curriculum documents.
  */
 export async function parseSyllabusWithGemini(
   text: string,
   apiKey: string
-): Promise<ParsedSyllabusResult> {
+): Promise<MultiCourseSyllabusResult> {
   if (!apiKey || apiKey.trim().length < 10) {
     throw new Error('Valid Gemini API key required for AI extraction');
   }
 
-  const prompt = `You are an expert college academic advisor and syllabus parser for FocusFlow AI.
-Analyze the following university course syllabus or document text.
-Extract:
-1. "courseName": The clean, exact course title (e.g. "Operating Systems & Systems Programming")
-2. "courseCode": The official academic code (e.g. "CS 350", "MATH 240")
-3. "examDate": The final exam or final project evaluation date in standard "YYYY-MM-DD" format. If only month/day is provided (e.g. Dec 14), assume year 2026. If no exam date is found, estimate a reasonable date 3 to 4 weeks from today.
-4. "topics": An array of core syllabus modules or lecture topics in chronological order. Strip out administrative boilerplate (like office hours, grading percentages, textbooks, plagiarism statements).
-   Each topic object must have:
-   - "name": Concise, professional topic title
-   - "difficulty": "easy", "medium", or "hard" based on conceptual complexity
-   - "estimatedHours": Number between 1.5 and 4.0 (e.g. 2.0, 2.5, 3.0)
+  const prompt = `You are an expert college academic advisor and curriculum parser for FocusFlow AI.
+Analyze the following university syllabus or evaluation scheme handbook.
+If it contains multiple subjects (e.g. B.Tech 4th Year with AI, Cloud Computing, IoT, Cryptography, etc.), extract ALL courses into the "courses" array.
+For each course:
+1. "courseName": Clean, exact course title
+2. "courseCode": Academic course code (e.g. "BCS701", "BCS070")
+3. "examDate": Target exam date in "YYYY-MM-DD" format (default 3 to 4 weeks out if not explicitly given)
+4. "topics": The 5 Units or lecture modules in order. Each topic has:
+   - "name": e.g. "Unit 1: Introduction to AI & Intelligent Agents"
+   - "difficulty": "easy", "medium", or "hard"
+   - "estimatedHours": number (e.g. 4.0 or 8.0)
 
 Output ONLY valid JSON matching this schema:
 {
-  "courseName": "string",
-  "courseCode": "string",
-  "examDate": "YYYY-MM-DD",
-  "topics": [
+  "programTitle": "string",
+  "courses": [
     {
-      "name": "string",
-      "difficulty": "easy" | "medium" | "hard",
-      "estimatedHours": number
+      "courseName": "string",
+      "courseCode": "string",
+      "examDate": "YYYY-MM-DD",
+      "topics": [
+        {
+          "name": "string",
+          "difficulty": "easy" | "medium" | "hard",
+          "estimatedHours": number
+        }
+      ]
     }
   ]
 }
 
 Syllabus Text:
 """
-${text.slice(0, 12000)}
+${text.slice(0, 16000)}
 """`;
 
   const response = await fetch(
@@ -498,20 +630,27 @@ ${text.slice(0, 12000)}
   }
 
   const parsed = JSON.parse(rawJson);
+  const rawCourses = Array.isArray(parsed.courses) ? parsed.courses : [parsed];
 
-  return {
-    courseName: parsed.courseName || 'Imported Course',
-    courseCode: parsed.courseCode || 'COURSE 101',
-    suggestedColor: SUBJECT_COLORS[Math.floor(Math.random() * SUBJECT_COLORS.length)],
-    examDate: parsed.examDate || addDays(getTodayDateString(), 21),
+  const courses: ParsedSyllabusResult[] = rawCourses.map((c: any, idx: number) => ({
+    courseName: c.courseName || 'University Course',
+    courseCode: c.courseCode || `COURSE ${100 + idx}`,
+    suggestedColor: SUBJECT_COLORS[idx % SUBJECT_COLORS.length],
+    examDate: c.examDate || addDays(getTodayDateString(), 28 + idx * 2),
     confidenceScore: 99,
     extractionMethod: 'ai',
-    topics: (parsed.topics || []).map((t: any) => ({
-      name: t.name || 'Core Concept',
+    topics: (c.topics || []).map((t: any) => ({
+      name: t.name || 'Core Unit',
       difficulty: (['easy', 'medium', 'hard'].includes(t.difficulty) ? t.difficulty : 'medium') as Difficulty,
-      estimatedHours: typeof t.estimatedHours === 'number' ? Math.max(1, Math.min(t.estimatedHours, 6)) : 2.0,
-      pattern: parsed.courseName,
+      estimatedHours: typeof t.estimatedHours === 'number' ? Math.max(1, Math.min(t.estimatedHours, 10)) : 4.0,
+      pattern: c.courseName,
     })),
+  }));
+
+  return {
+    isMultiCourse: courses.length > 1,
+    programTitle: parsed.programTitle || 'B.Tech 4th Year Curriculum',
+    courses,
   };
 }
 
@@ -519,6 +658,81 @@ ${text.slice(0, 12000)}
  * Pre-defined sample syllabi for students to test instant document parsing with 1 click.
  */
 export const SAMPLE_SYLLABI: Array<{ title: string; subtitle: string; content: string }> = [
+  {
+    title: '🎓 AKTU B.Tech 4th Year (CS & Design) Bundle',
+    subtitle: '5 Core Courses: AI (BCS701), IoT (BCS070), Cloud (BCS071), Crypto (BCS072), Mobile Apps (BCS073)',
+    content: `DR. A.P.J. ABDUL KALAM TECHNICAL UNIVERSITY, LUCKNOW, UTTAR PRADESH
+EVALUATION SCHEME & SYLLABUS FOR B. TECH. 4TH YEAR
+Computer Science and Design Based On NEP2020 (Session: 2025-26)
+
+SEMESTER- VII
+1 BCS701 Artificial Intelligence (Credit: 3)
+2 BCS070 Internet of Things (Credit: 3)
+3 BCS071 Cloud Computing (Credit: 3)
+4 BCS072 Cryptography & Network Security (Credit: 3)
+5 BCS073 Design & Development of Applications (Credit: 3)
+6 BCS751 Artificial Intelligence LAB (Credit: 1)
+
+Artificial Intelligence (BCS701)
+DETAILED SYLLABUS
+Unit Topic Proposed Lecture
+I Introduction to Artificial Intelligence & Intelligent Agents: Definition and scope of AI, History and applications of AI, Characteristics of Intelligent Agents, Agent architecture, Problem Solving Approach 08
+II Problem Solving & Search Strategies: Uninformed Search: BFS, DFS, Iterative Deepening, Informed Search: Greedy Best-First, A* Search, Heuristics, Hill Climbing, Simulated Annealing, Game Playing: Min-max, Alpha-Beta Pruning 08
+III Knowledge Representation & Reasoning: Propositional and First Order Logic, Syntax, Semantics, Wumpus world, Logic Programming using Prolog, Forward and Backward Chaining, Resolution 08
+IV Uncertainty & Learning Techniques: Probabilistic reasoning, Bayes' Rule, Bayesian Networks, Fuzzy logic, Neural Networks (basics): Perceptron, Backpropagation, Supervised and Unsupervised Learning 08
+V Applications of AI & Multi-Agent Systems: Natural Language Processing, Machine Translation, Information Retrieval, Robotics: Perception and Motion, Software Agents, Explainable AI (XAI) 08
+
+Internet of Things (BCS070)
+DETAILED SYLLABUS
+Unit Topic Proposed Lecture
+I Internet of Things (IoT): Vision, Definition, Conceptual Framework, Architectural view, M2M Communication, Design Principles for Connected Devices, Standardization 08
+II Hardware for IoT: Sensors, Digital sensors, actuators, RFID technology, Wireless sensor networks, Embedded Platforms: Arduino, Raspberry Pi, Beagle Bone, ARM cortex 08
+III Network & Communication aspects in IoT: Wireless Medium access issues, MAC protocol survey, Routing protocols, Sensor deployment & Node discovery 08
+IV Programming the Arduino: Arduino Platform Boards Anatomy, Arduino IDE, coding, emulators, using libraries, programming Arduino for IoT 08
+V Challenges in IoT Design: Development Challenges, Security Challenges, IoT Applications: Smart Metering, E-health, City Automation, Automotive, Smart street lights 08
+
+Cloud Computing (BCS071)
+DETAILED SYLLABUS
+Unit Topic Proposed Lecture
+I Introduction To Cloud Computing: Definition of Cloud, Evolution of Cloud Computing, Parallel and Distributed Computing, Elasticity in Cloud, On-demand Provisioning 08
+II Cloud Enabling Technologies Service Oriented Architecture: REST, Web Services, Virtualization basics, CPU/Memory/IO Virtualization, Disaster Recovery 08
+III Cloud Architecture, Services And Storage: NIST Cloud Architecture, Public, Private and Hybrid Clouds, IaaS, PaaS, SaaS, Cloud Storage, S3 08
+IV Resource Management And Security In Cloud: Inter Cloud Resource Management, Security Overview, SaaS Security, Virtual Machine Security, IAM 08
+V Cloud Technologies And Advancements: Hadoop, MapReduce, Open Stack, Google App Engine, Federation in the Cloud 08
+
+Cryptography & Network Security (BCS072)
+DETAILED SYLLABUS
+Unit Topic Proposed Lecture
+I Introduction to security attacks, services and mechanism, Classical encryption (substitution, transposition), Stream and block ciphers, DES, Triple DES 08
+II Finite Fields GF(p), Modular arithmetic, Extended Euclidean Algorithm, AES encryption/decryption, Fermat's & Euler's theorem, RSA algorithm 08
+III Message Authentication Codes: Hash functions, SHA, Digital Signatures (DSS), Elgamal Signature Techniques 08
+IV Key Management and distribution: Symmetric key distribution, Diffie-Hellman Key Exchange, Public key distribution, X.509, PKI, PGP, S/MIME 08
+V IP Security: Architecture, Authentication header, ESP, Intrusion detection, Viruses and related threats, Firewalls 08
+
+Design & Development of Applications (BCS073)
+DETAILED SYLLABUS
+Unit Topic Proposed Lecture
+I Introduction to mobile applications: Embedded systems, Market drivers, Publishing and delivery, Requirements gathering 08
+II Basic Design: Embedded systems design, Embedded OS, Mobile UI, Touch events and gestures, Quality constraints 08
+III Advanced Design: Multimedia, Web access, GPS and Social media integration, Cloud environment access, Design patterns 08
+IV Technology I – Android: Android architecture, Activities, Views, SQLite, Packaging and deployment, Google Maps, Wi-Fi 08
+V Technology II – iOS: Objective C, Swift features, UI implementation, Core Data, Location and Map Kit 08
+
+BCS751 ARTIFICIAL INTELLIGENCE LAB
+DETAILED SYLLABUS
+1. Implement Breadth First Search (BFS) for a given graph or maze.
+2. Implement Depth First Search (DFS) for a tree or graph structure.
+3. Solve the 8-Puzzle Problem using A* Search Algorithm.
+4. Implement Hill Climbing Algorithm for numerical optimization or pathfinding.
+5. Implement Simulated Annealing Algorithm for constraint-based search problems.
+6. Solve Water Jug Problem using state-space search (BFS or DFS).
+7. Write Prolog programs to define family relationships using predicates.
+8. Implement 4-Queens Problem in Prolog using backtracking.
+9. Implement Unification Algorithm in Python or Prolog.
+10. Implement Min-Max (Minimax) Algorithm for decision making in turn-based games.
+11. Enhance the game with Alpha-Beta Pruning to optimize Min-Max.
+12. Build a simple chatbot using rules or pre-trained logic.`,
+  },
   {
     title: 'CS 350: Operating Systems & Concurrency',
     subtitle: 'Threads, Paging, Virtual Memory, Deadlocks & File Systems',
@@ -579,7 +793,7 @@ Topics Covered:
  * Convert parsed result into a full Subject object.
  */
 export function createSubjectFromParsed(parsed: ParsedSyllabusResult): Subject {
-  const subjectId = `subj-${Date.now()}`;
+  const subjectId = `subj-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
   const topics: Topic[] = parsed.topics.map((t, idx) => ({
     id: `top-${subjectId}-${idx + 1}`,

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Subject, Difficulty } from '../types';
 import {
-  parseSyllabusText,
+  parseMultiCourseSyllabus,
   parseSyllabusWithGemini,
   createSubjectFromParsed,
   ParsedSyllabusResult,
+  MultiCourseSyllabusResult,
   SAMPLE_SYLLABI,
   SUBJECT_COLORS,
 } from '../services/syllabusParser';
+import { extractTextFromPdf } from '../services/pdfReader';
 import {
   X,
   FileText,
@@ -20,16 +22,19 @@ import {
   BookOpen,
   ArrowRight,
   CheckCircle2,
-  Cpu,
   Key,
   AlertCircle,
   RefreshCw,
+  GraduationCap,
+  CheckSquare,
+  Square,
 } from 'lucide-react';
 
 interface SyllabusImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImportSubject: (subject: Subject) => void;
+  onImportMultipleSubjects?: (subjects: Subject[]) => void;
   isDarkMode?: boolean;
   geminiApiKey?: string;
 }
@@ -38,6 +43,7 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
   isOpen,
   onClose,
   onImportSubject,
+  onImportMultipleSubjects,
   geminiApiKey,
 }) => {
   const [activeTab, setActiveTab] = useState<'upload' | 'paste'>('upload');
@@ -46,7 +52,11 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isAiProcessing, setIsAiProcessing] = useState<boolean>(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [parsedData, setParsedData] = useState<ParsedSyllabusResult | null>(null);
+  
+  // Multi-course state (e.g. B.Tech 4th Year Curriculum)
+  const [multiCourseResult, setMultiCourseResult] = useState<MultiCourseSyllabusResult | null>(null);
+  const [activeCourseIndex, setActiveCourseIndex] = useState<number>(0);
+  const [selectedCourseIndices, setSelectedCourseIndices] = useState<number[]>([]);
   const [customApiKey, setCustomApiKey] = useState<string>('');
   const [showKeyInput, setShowKeyInput] = useState<boolean>(false);
 
@@ -54,63 +64,26 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
 
   const effectiveApiKey = geminiApiKey || customApiKey;
 
-  // Resilient client-side text extractor for PDF binaries
-  const extractTextFromPdfArrayBuffer = (buffer: ArrayBuffer): string => {
-    try {
-      const uint8 = new Uint8Array(buffer);
-      const binary = new TextDecoder('latin1').decode(uint8);
+  const currentCourse: ParsedSyllabusResult | null =
+    multiCourseResult && multiCourseResult.courses[activeCourseIndex]
+      ? multiCourseResult.courses[activeCourseIndex]
+      : null;
 
-      // Strategy 1: Match standard text literal streams ((Text) Tj or [ (Text) ] TJ)
-      const tjMatches = binary.match(/\((.*?)\)\s*Tj/g);
-      if (tjMatches && tjMatches.length > 5) {
-        return tjMatches
-          .map((m) =>
-            m
-              .replace(/^\(/, '')
-              .replace(/\)\s*Tj$/, '')
-              .replace(/\\([()\\])/g, '$1')
-          )
-          .join(' ')
-          .replace(/\s{2,}/g, ' ');
-      }
-
-      // Strategy 2: Extract text blocks within BT (Begin Text) ... ET (End Text)
-      const btBlocks = binary.match(/BT[\s\S]*?ET/g);
-      if (btBlocks && btBlocks.length > 0) {
-        const collected: string[] = [];
-        for (const block of btBlocks) {
-          const strings = block.match(/\((.*?)\)/g);
-          if (strings) {
-            collected.push(
-              strings
-                .map((s) => s.slice(1, -1).replace(/\\([()\\])/g, '$1'))
-                .join(' ')
-            );
-          }
-        }
-        if (collected.length > 0) {
-          return collected.join('\n');
-        }
-      }
-
-      // Strategy 3: Clean alphanumeric words from binary stream
-      const clean = binary.replace(/[^a-zA-Z0-9\s.,:\-–|()]/g, ' ');
-      const words = clean
-        .split(/\s{2,}/)
-        .map((w) => w.trim())
-        .filter((w) => w.length > 2 && !/^[0-9a-f]{8,}$/i.test(w));
-
-      if (words.length > 15) {
-        return words.join('\n');
-      }
-
-      return '';
-    } catch {
-      return '';
+  // Process extracted raw text into single or multi-course results
+  const processExtractedText = (text: string) => {
+    setRawText(text);
+    setAiError(null);
+    if (text.trim().length > 15) {
+      const parsed = parseMultiCourseSyllabus(text);
+      setMultiCourseResult(parsed);
+      setActiveCourseIndex(0);
+      setSelectedCourseIndices(parsed.courses.map((_, idx) => idx));
+    } else {
+      setMultiCourseResult(null);
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -118,55 +91,34 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
     setIsProcessing(true);
     setAiError(null);
 
-    const reader = new FileReader();
-
     if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-      reader.onload = (event) => {
-        try {
-          const buffer = event.target?.result as ArrayBuffer;
-          const extracted = extractTextFromPdfArrayBuffer(buffer);
+      try {
+        const buffer = await file.arrayBuffer();
+        const extracted = await extractTextFromPdf(buffer);
 
-          if (extracted.trim().length > 30) {
-            setRawText(extracted);
-            const parsed = parseSyllabusText(extracted);
-            setParsedData(parsed);
-          } else {
-            // If scanned PDF without text layer, provide structured starter template
-            const fallbackText = `Course: ${file.name.replace('.pdf', '')}\nFinal Exam Date: 2026-11-20\n\nModule 1: Introduction & Architecture\nModule 2: Core Theoretical Principles\nModule 3: Algorithms & Analysis\nModule 4: Advanced Problem Solving\nModule 5: Final Review & Synthesis`;
-            setRawText(fallbackText);
-            const parsed = parseSyllabusText(fallbackText);
-            setParsedData(parsed);
-          }
-        } catch {
-          const fallbackText = `Course: ${file.name.replace('.pdf', '')}\nFinal Exam Date: 2026-11-20`;
-          setRawText(fallbackText);
-          setParsedData(parseSyllabusText(fallbackText));
-        } finally {
-          setIsProcessing(false);
+        if (extracted.trim().length > 30) {
+          processExtractedText(extracted);
+        } else {
+          // Fallback starter template
+          const fallbackText = `Course: ${file.name.replace('.pdf', '')}\nFinal Exam Date: 2026-11-20\n\nModule 1: Introduction & Architecture\nModule 2: Core Theoretical Principles\nModule 3: Algorithms & Analysis\nModule 4: Advanced Problem Solving\nModule 5: Final Review & Synthesis`;
+          processExtractedText(fallbackText);
         }
-      };
-      reader.readAsArrayBuffer(file);
+      } catch (err: any) {
+        console.error('PDF parsing failed:', err);
+        const fallbackText = `Course: ${file.name.replace('.pdf', '')}\nFinal Exam Date: 2026-11-20`;
+        processExtractedText(fallbackText);
+      } finally {
+        setIsProcessing(false);
+      }
     } else {
       // Plain text, markdown, or doc
+      const reader = new FileReader();
       reader.onload = (event) => {
         const text = (event.target?.result as string) || '';
-        setRawText(text);
-        const parsed = parseSyllabusText(text);
-        setParsedData(parsed);
+        processExtractedText(text);
         setIsProcessing(false);
       };
       reader.readAsText(file);
-    }
-  };
-
-  const handleParseText = (text: string) => {
-    setRawText(text);
-    setAiError(null);
-    if (text.trim().length > 10) {
-      const parsed = parseSyllabusText(text);
-      setParsedData(parsed);
-    } else {
-      setParsedData(null);
     }
   };
 
@@ -174,9 +126,7 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
     setRawText(sample.content);
     setFileName(null);
     setActiveTab('paste');
-    setAiError(null);
-    const parsed = parseSyllabusText(sample.content);
-    setParsedData(parsed);
+    processExtractedText(sample.content);
   };
 
   const handleRunAiExtraction = async () => {
@@ -192,12 +142,13 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
 
     try {
       const result = await parseSyllabusWithGemini(rawText, effectiveApiKey);
-      setParsedData(result);
+      setMultiCourseResult(result);
+      setActiveCourseIndex(0);
+      setSelectedCourseIndices(result.courses.map((_, idx) => idx));
     } catch (err: any) {
       setAiError(err.message || 'Gemini AI parsing failed. Reverted to offline heuristic engine.');
-      // Keep or update heuristic parse as fallback
-      if (!parsedData) {
-        setParsedData(parseSyllabusText(rawText));
+      if (!multiCourseResult) {
+        processExtractedText(rawText);
       }
     } finally {
       setIsAiProcessing(false);
@@ -205,43 +156,118 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
   };
 
   const handleUpdateTopic = (index: number, field: string, val: any) => {
-    if (!parsedData) return;
-    const updated = [...parsedData.topics];
-    updated[index] = { ...updated[index], [field]: val };
-    setParsedData({ ...parsedData, topics: updated });
-  };
+    if (!multiCourseResult || !currentCourse) return;
+    const updatedTopics = [...currentCourse.topics];
+    updatedTopics[index] = { ...updatedTopics[index], [field]: val };
 
-  const handleDeleteTopic = (index: number) => {
-    if (!parsedData) return;
-    const updated = parsedData.topics.filter((_, i) => i !== index);
-    setParsedData({ ...parsedData, topics: updated });
-  };
+    const updatedCourses = [...multiCourseResult.courses];
+    updatedCourses[activeCourseIndex] = {
+      ...currentCourse,
+      topics: updatedTopics,
+    };
 
-  const handleAddTopic = () => {
-    if (!parsedData) return;
-    setParsedData({
-      ...parsedData,
-      topics: [
-        ...parsedData.topics,
-        {
-          name: 'New Core Topic',
-          difficulty: 'medium',
-          estimatedHours: 2.0,
-        },
-      ],
+    setMultiCourseResult({
+      ...multiCourseResult,
+      courses: updatedCourses,
     });
   };
 
-  const handleConfirmImport = () => {
-    if (!parsedData) return;
-    const subject = createSubjectFromParsed(parsedData);
+  const handleDeleteTopic = (index: number) => {
+    if (!multiCourseResult || !currentCourse) return;
+    const updatedTopics = currentCourse.topics.filter((_, i) => i !== index);
+
+    const updatedCourses = [...multiCourseResult.courses];
+    updatedCourses[activeCourseIndex] = {
+      ...currentCourse,
+      topics: updatedTopics,
+    };
+
+    setMultiCourseResult({
+      ...multiCourseResult,
+      courses: updatedCourses,
+    });
+  };
+
+  const handleAddTopic = () => {
+    if (!multiCourseResult || !currentCourse) return;
+    const updatedTopics = [
+      ...currentCourse.topics,
+      {
+        name: `Unit ${currentCourse.topics.length + 1}: New Syllabus Topic`,
+        difficulty: 'medium' as Difficulty,
+        estimatedHours: 4.0,
+      },
+    ];
+
+    const updatedCourses = [...multiCourseResult.courses];
+    updatedCourses[activeCourseIndex] = {
+      ...currentCourse,
+      topics: updatedTopics,
+    };
+
+    setMultiCourseResult({
+      ...multiCourseResult,
+      courses: updatedCourses,
+    });
+  };
+
+  const handleUpdateCourseMeta = (field: keyof ParsedSyllabusResult, val: any) => {
+    if (!multiCourseResult || !currentCourse) return;
+    const updatedCourses = [...multiCourseResult.courses];
+    updatedCourses[activeCourseIndex] = {
+      ...currentCourse,
+      [field]: val,
+    };
+
+    setMultiCourseResult({
+      ...multiCourseResult,
+      courses: updatedCourses,
+    });
+  };
+
+  const handleToggleCourseSelection = (idx: number) => {
+    if (selectedCourseIndices.includes(idx)) {
+      if (selectedCourseIndices.length > 1) {
+        setSelectedCourseIndices(selectedCourseIndices.filter((i) => i !== idx));
+      }
+    } else {
+      setSelectedCourseIndices([...selectedCourseIndices, idx]);
+    }
+  };
+
+  // Import single active course
+  const handleConfirmSingleImport = () => {
+    if (!currentCourse) return;
+    const subject = createSubjectFromParsed(currentCourse);
     onImportSubject(subject);
     onClose();
   };
 
+  // Import all selected B.Tech courses at once
+  const handleConfirmMultiImport = () => {
+    if (!multiCourseResult) return;
+    const subjectsToImport = multiCourseResult.courses
+      .filter((_, idx) => selectedCourseIndices.includes(idx))
+      .map((c) => createSubjectFromParsed(c));
+
+    if (onImportMultipleSubjects && subjectsToImport.length > 1) {
+      onImportMultipleSubjects(subjectsToImport);
+    } else if (subjectsToImport.length > 0) {
+      // Fallback
+      subjectsToImport.forEach((subj) => onImportSubject(subj));
+    }
+    onClose();
+  };
+
+  const totalSelectedTopics = multiCourseResult
+    ? multiCourseResult.courses
+        .filter((_, idx) => selectedCourseIndices.includes(idx))
+        .reduce((sum, c) => sum + c.topics.length, 0)
+    : 0;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in font-sans">
-      <div className="relative w-full max-w-3xl bg-white dark:bg-[#12151e] border border-gray-200 dark:border-indigo-500/30 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[94vh] transition-colors">
+      <div className="relative w-full max-w-4xl bg-white dark:bg-[#12151e] border border-gray-200 dark:border-indigo-500/30 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[94vh] transition-colors">
         {/* Header */}
         <div className="p-6 border-b border-gray-200 dark:border-[#1e2230] bg-gray-50/70 dark:bg-gradient-to-r dark:from-indigo-950/60 dark:to-purple-950/40 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -251,15 +277,15 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-bold uppercase tracking-wide">
-                  High-Precision Ingestion
+                  Curriculum Ingestion
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold tracking-wide flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Dual Engine
+                  PDF.js Multi-Course Engine
                 </span>
               </div>
               <h2 className="text-lg font-extrabold text-gray-900 dark:text-white tracking-tight mt-0.5">
-                Import Course Syllabus
+                Import Course Syllabus or Curriculum Handbook
               </h2>
             </div>
           </div>
@@ -288,7 +314,7 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
                   }`}
                 >
                   <Upload className="w-3.5 h-3.5" />
-                  <span>Upload PDF / TXT / Doc</span>
+                  <span>Upload PDF / Syllabus File</span>
                 </button>
 
                 <button
@@ -318,28 +344,25 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
                   ) : (
                     <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                   )}
-                  <span>{isAiProcessing ? 'Extracting via AI...' : 'AI Smart Extract (Gemini)'}</span>
+                  <span>{isAiProcessing ? 'Extracting via AI...' : 'AI Zero-Shot Extract'}</span>
                 </button>
               )}
             </div>
 
-            {/* Quick API Key Prompt if clicked without key */}
+            {/* Quick API Key Prompt */}
             {showKeyInput && !effectiveApiKey && (
               <div className="mb-4 p-4 rounded-2xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/40 animate-fade-in space-y-2">
                 <div className="flex items-center gap-2 text-purple-900 dark:text-purple-200 font-bold text-xs">
                   <Key className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   <span>Enter Gemini API Key for Zero-Shot Precision</span>
                 </div>
-                <p className="text-[11px] text-purple-700 dark:text-purple-300">
-                  Gemini analyzes multi-column schedules, cleans boilerplate, and infers exact exam dates. (You can also save it in Settings).
-                </p>
                 <div className="flex items-center gap-2 pt-1">
                   <input
                     type="password"
                     placeholder="AIzaSy..."
                     value={customApiKey}
                     onChange={(e) => setCustomApiKey(e.target.value)}
-                    className="flex-1 p-2 rounded-xl bg-white dark:bg-[#12151e] border border-purple-300 dark:border-purple-700 text-gray-900 dark:text-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="flex-1 p-2 rounded-xl bg-white dark:bg-[#12151e] border border-purple-300 dark:border-purple-700 text-gray-900 dark:text-white text-xs font-mono focus:outline-none"
                   />
                   <button
                     type="button"
@@ -353,7 +376,6 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
               </div>
             )}
 
-            {/* AI Error Alert */}
             {aiError && (
               <div className="mb-4 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 text-amber-800 dark:text-amber-200 text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-600" />
@@ -374,14 +396,15 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
                   <Upload className="w-6 h-6" />
                 </div>
                 <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                  {fileName ? fileName : 'Drag & drop your syllabus PDF or TXT file here'}
+                  {fileName ? fileName : 'Drag & drop your B.Tech Syllabus PDF or Course Document here'}
                 </h4>
                 <p className="text-xs text-gray-400 mt-1">
-                  Supports real-world course syllabi, lecture schedules, and PDF reading outlines
+                  Powered by PDF.js: Extracts multi-page university handbooks, tables, units, and semester schemes.
                 </p>
                 {isProcessing && (
-                  <p className="text-xs text-indigo-500 font-semibold mt-2 animate-pulse">
-                    Filtering boilerplate & extracting topics...
+                  <p className="text-xs text-indigo-500 font-semibold mt-2 animate-pulse flex items-center justify-center gap-1.5">
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Decompressing PDF vector text and splitting into courses...</span>
                   </p>
                 )}
               </div>
@@ -391,17 +414,17 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
             {activeTab === 'paste' && (
               <div className="space-y-3">
                 <textarea
-                  rows={6}
+                  rows={5}
                   value={rawText}
-                  onChange={(e) => handleParseText(e.target.value)}
-                  placeholder="Paste your course outline, lecture list, or syllabus here... (e.g. Course: CS 350, Exam: Dec 15, Module 1: Processes, Module 2: Threads...)"
+                  onChange={(e) => processExtractedText(e.target.value)}
+                  placeholder="Paste your course outline or university evaluation scheme here..."
                   className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-[#171b26] border border-gray-200 dark:border-[#1e2230] text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:border-indigo-500 font-mono transition-colors"
                 />
 
                 {/* Pre-built Sample Syllabus Pills */}
                 <div>
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">
-                    Or try a pre-loaded syllabus:
+                    Or click a pre-loaded syllabus bundle:
                   </span>
                   <div className="flex flex-wrap gap-2">
                     {SAMPLE_SYLLABI.map((sample, idx) => (
@@ -409,9 +432,13 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
                         key={idx}
                         type="button"
                         onClick={() => handleLoadSample(sample)}
-                        className="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-[#171b26] hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 border border-gray-200/80 dark:border-[#1e2230] text-[11px] font-medium transition-all"
+                        className={`px-3 py-1.5 rounded-xl border text-[11px] font-medium transition-all ${
+                          idx === 0
+                            ? 'bg-purple-50 dark:bg-purple-950/50 border-purple-300 dark:border-purple-700/60 text-purple-700 dark:text-purple-300 font-bold hover:scale-102 shadow-xs'
+                            : 'bg-gray-100 dark:bg-[#171b26] hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 border-gray-200/80 dark:border-[#1e2230]'
+                        }`}
                       >
-                        ⚡ {sample.title}
+                        {sample.title}
                       </button>
                     ))}
                   </div>
@@ -420,156 +447,237 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
             )}
           </div>
 
-          {/* Step 2: Parsed Result & Customization */}
-          {parsedData && (
-            <div className="p-5 rounded-3xl bg-gray-50 dark:bg-[#171b26] border border-gray-200 dark:border-[#1e2230] space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 dark:border-[#1e2230] pb-3">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span className="font-extrabold text-xs text-gray-900 dark:text-white uppercase tracking-wider">
-                    Extracted Plan ({parsedData.topics.length} Topics)
-                  </span>
-
-                  {/* Accuracy & Engine Badge */}
-                  {parsedData.extractionMethod === 'ai' ? (
-                    <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 font-bold border border-purple-300 dark:border-purple-500/30">
-                      <Sparkles className="w-3 h-3 text-purple-500" />
-                      Gemini AI Extracted (99% Accuracy)
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-500/30">
-                      <Cpu className="w-3 h-3 text-emerald-500" />
-                      Local De-Noised Engine ({parsedData.confidenceScore || 90}% Confidence)
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-gray-400">Color:</span>
-                  <div className="flex items-center gap-1">
-                    {SUBJECT_COLORS.slice(0, 5).map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setParsedData({ ...parsedData, suggestedColor: c })}
-                        className={`w-4 h-4 rounded-full transition-transform ${
-                          parsedData.suggestedColor === c ? 'scale-125 ring-2 ring-white' : ''
-                        }`}
-                        style={{ backgroundColor: c }}
-                      />
-                    ))}
+          {/* Step 2: Multi-Course Selection & Curriculum Section */}
+          {multiCourseResult && multiCourseResult.courses.length > 0 && (
+            <div className="space-y-4">
+              {/* Multi-Course Top Bar */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-900/20 via-indigo-900/20 to-transparent border border-purple-300/40 dark:border-purple-800/40 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold">
+                    <GraduationCap className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider">
+                      {multiCourseResult.programTitle}
+                    </h3>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                      Found {multiCourseResult.courses.length} courses with individual units & lab experiments.
+                    </p>
                   </div>
                 </div>
-              </div>
 
-              {/* Course Meta Inputs */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
-                    Course Name
-                  </label>
-                  <input
-                    type="text"
-                    value={parsedData.courseName}
-                    onChange={(e) => setParsedData({ ...parsedData, courseName: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-white dark:bg-[#12151e] border border-gray-200 dark:border-[#1e2230] text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
-                    Course Code
-                  </label>
-                  <input
-                    type="text"
-                    value={parsedData.courseCode}
-                    onChange={(e) => setParsedData({ ...parsedData, courseCode: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-white dark:bg-[#12151e] border border-gray-200 dark:border-[#1e2230] text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1 flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-indigo-500" />
-                    Target Exam Date
-                  </label>
-                  <input
-                    type="date"
-                    value={parsedData.examDate}
-                    onChange={(e) => setParsedData({ ...parsedData, examDate: e.target.value })}
-                    className="w-full p-2 rounded-xl bg-white dark:bg-[#12151e] border border-gray-200 dark:border-[#1e2230] text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-
-              {/* Topic List */}
-              <div className="space-y-2 pt-2">
-                <div className="flex items-center justify-between text-[11px] text-gray-400 font-semibold px-1">
-                  <span>Extracted Topics & Workload Allocation</span>
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={handleAddTopic}
-                    className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center gap-1"
+                    onClick={() =>
+                      setSelectedCourseIndices(
+                        selectedCourseIndices.length === multiCourseResult.courses.length
+                          ? [0]
+                          : multiCourseResult.courses.map((_, i) => i)
+                      )
+                    }
+                    className="text-[11px] font-mono text-purple-600 dark:text-purple-400 hover:underline font-bold"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add Topic</span>
+                    {selectedCourseIndices.length === multiCourseResult.courses.length
+                      ? 'Deselect All'
+                      : 'Select All Courses'}
                   </button>
                 </div>
+              </div>
 
-                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                  {parsedData.topics.map((t, idx) => (
-                    <div
-                      key={idx}
-                      className="p-2.5 rounded-xl bg-white dark:bg-[#12151e] border border-gray-200 dark:border-[#1e2230] flex items-center justify-between gap-3 shadow-xs hover:border-indigo-500/40 transition-colors"
-                    >
-                      <input
-                        type="text"
-                        value={t.name}
-                        onChange={(e) => handleUpdateTopic(idx, 'name', e.target.value)}
-                        className="flex-1 bg-transparent border-none text-xs text-gray-900 dark:text-white font-medium focus:outline-none"
-                      />
+              {/* Course Selector Tabs: Allows clicking on each course one by one */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                  Select a course to inspect & customize syllabus units:
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                  {multiCourseResult.courses.map((c, idx) => {
+                    const isSelected = selectedCourseIndices.includes(idx);
+                    const isActive = activeCourseIndex === idx;
 
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {/* Hours */}
-                        <div className="flex items-center gap-1 text-gray-400 text-[11px]">
-                          <Clock className="w-3 h-3 text-indigo-500" />
-                          <input
-                            type="number"
-                            step="0.5"
-                            min="0.5"
-                            max="10"
-                            value={t.estimatedHours}
-                            onChange={(e) =>
-                              handleUpdateTopic(idx, 'estimatedHours', parseFloat(e.target.value) || 1.5)
-                            }
-                            className="w-12 p-1 rounded-lg bg-gray-100 dark:bg-[#171b26] border border-gray-200 dark:border-[#1e2230] text-center text-xs font-bold text-gray-900 dark:text-white"
-                          />
-                          <span>h</span>
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => setActiveCourseIndex(idx)}
+                        className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-2.5 ${
+                          isActive
+                            ? 'bg-indigo-50/80 dark:bg-indigo-950/50 border-indigo-500 shadow-sm'
+                            : 'bg-gray-50 dark:bg-[#171b26] border-gray-200 dark:border-[#1e2230] hover:border-gray-300 dark:hover:border-gray-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleCourseSelection(idx);
+                            }}
+                            className="text-gray-400 hover:text-indigo-600 transition-colors"
+                          >
+                            {isSelected ? (
+                              <CheckSquare className="w-4 h-4 text-emerald-500" />
+                            ) : (
+                              <Square className="w-4 h-4" />
+                            )}
+                          </button>
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400 uppercase block">
+                              {c.courseCode}
+                            </span>
+                            <h4 className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                              {c.courseName}
+                            </h4>
+                          </div>
                         </div>
 
-                        {/* Difficulty */}
-                        <select
-                          value={t.difficulty}
-                          onChange={(e) => handleUpdateTopic(idx, 'difficulty', e.target.value as Difficulty)}
-                          className="p-1 rounded-lg bg-gray-100 dark:bg-[#171b26] border border-gray-200 dark:border-[#1e2230] text-[10px] font-bold text-gray-700 dark:text-gray-300 capitalize"
-                        >
-                          <option value="easy">Easy</option>
-                          <option value="medium">Med</option>
-                          <option value="hard">Hard</option>
-                        </select>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteTopic(idx)}
-                          className="p-1 text-gray-400 hover:text-rose-500 transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-lg bg-white dark:bg-[#12151e] border border-gray-200 dark:border-[#1e2230] text-gray-600 dark:text-gray-400 flex-shrink-0">
+                          {c.topics.length} Units
+                        </span>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
+
+              {/* Step 3: Active Course Units Editor */}
+              {currentCourse && (
+                <div className="p-5 rounded-3xl bg-gray-50 dark:bg-[#171b26] border border-gray-200 dark:border-[#1e2230] space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 dark:border-[#1e2230] pb-3">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                      <span className="font-extrabold text-xs text-gray-900 dark:text-white uppercase tracking-wider">
+                        {currentCourse.courseName} &bull; {currentCourse.courseCode} ({currentCourse.topics.length} Units)
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] text-gray-400">Color:</span>
+                      <div className="flex items-center gap-1">
+                        {SUBJECT_COLORS.slice(0, 6).map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => handleUpdateCourseMeta('suggestedColor', c)}
+                            className={`w-4 h-4 rounded-full transition-transform ${
+                              currentCourse.suggestedColor === c ? 'scale-125 ring-2 ring-white' : ''
+                            }`}
+                            style={{ backgroundColor: c }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Course Meta Inputs */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
+                        Subject Title
+                      </label>
+                      <input
+                        type="text"
+                        value={currentCourse.courseName}
+                        onChange={(e) => handleUpdateCourseMeta('courseName', e.target.value)}
+                        className="w-full p-2.5 rounded-xl bg-white dark:bg-[#12151e] border border-gray-200 dark:border-[#1e2230] text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
+                        Course Code
+                      </label>
+                      <input
+                        type="text"
+                        value={currentCourse.courseCode}
+                        onChange={(e) => handleUpdateCourseMeta('courseCode', e.target.value)}
+                        className="w-full p-2.5 rounded-xl bg-white dark:bg-[#12151e] border border-gray-200 dark:border-[#1e2230] text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1 flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-indigo-500" />
+                        Target Exam Date
+                      </label>
+                      <input
+                        type="date"
+                        value={currentCourse.examDate}
+                        onChange={(e) => handleUpdateCourseMeta('examDate', e.target.value)}
+                        className="w-full p-2 rounded-xl bg-white dark:bg-[#12151e] border border-gray-200 dark:border-[#1e2230] text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Topic List */}
+                  <div className="space-y-2 pt-2">
+                    <div className="flex items-center justify-between text-[11px] text-gray-400 font-semibold px-1">
+                      <span>Course Units & Lecture Allocation</span>
+                      <button
+                        type="button"
+                        onClick={handleAddTopic}
+                        className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center gap-1"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Unit</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                      {currentCourse.topics.map((t, idx) => (
+                        <div
+                          key={idx}
+                          className="p-2.5 rounded-xl bg-white dark:bg-[#12151e] border border-gray-200 dark:border-[#1e2230] flex items-center justify-between gap-3 shadow-xs hover:border-indigo-500/40 transition-colors"
+                        >
+                          <input
+                            type="text"
+                            value={t.name}
+                            onChange={(e) => handleUpdateTopic(idx, 'name', e.target.value)}
+                            className="flex-1 bg-transparent border-none text-xs text-gray-900 dark:text-white font-medium focus:outline-none"
+                          />
+
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {/* Hours */}
+                            <div className="flex items-center gap-1 text-gray-400 text-[11px]">
+                              <Clock className="w-3 h-3 text-indigo-500" />
+                              <input
+                                type="number"
+                                step="0.5"
+                                min="0.5"
+                                max="15"
+                                value={t.estimatedHours}
+                                onChange={(e) =>
+                                  handleUpdateTopic(idx, 'estimatedHours', parseFloat(e.target.value) || 2.0)
+                                }
+                                className="w-12 p-1 rounded-lg bg-gray-100 dark:bg-[#171b26] border border-gray-200 dark:border-[#1e2230] text-center text-xs font-bold text-gray-900 dark:text-white"
+                              />
+                              <span>h</span>
+                            </div>
+
+                            {/* Difficulty */}
+                            <select
+                              value={t.difficulty}
+                              onChange={(e) => handleUpdateTopic(idx, 'difficulty', e.target.value as Difficulty)}
+                              className="p-1 rounded-lg bg-gray-100 dark:bg-[#171b26] border border-gray-200 dark:border-[#1e2230] text-[10px] font-bold text-gray-700 dark:text-gray-300 capitalize"
+                            >
+                              <option value="easy">Easy</option>
+                              <option value="medium">Med</option>
+                              <option value="hard">Hard</option>
+                            </select>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteTopic(idx)}
+                              className="p-1 text-gray-400 hover:text-rose-500 transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -584,20 +692,48 @@ export const SyllabusImportModal: React.FC<SyllabusImportModalProps> = ({
             Cancel
           </button>
 
-          <button
-            type="button"
-            disabled={!parsedData || parsedData.topics.length === 0}
-            onClick={handleConfirmImport}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-md ${
-              parsedData && parsedData.topics.length > 0
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-indigo-600/25 cursor-pointer'
-                : 'bg-gray-300 dark:bg-[#1e2230] text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Generate Study Plan & Schedule</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex items-center gap-3">
+            {multiCourseResult && multiCourseResult.courses.length > 1 ? (
+              <>
+                <button
+                  type="button"
+                  disabled={!currentCourse}
+                  onClick={handleConfirmSingleImport}
+                  className="px-4 py-2.5 rounded-xl bg-gray-200 dark:bg-[#171b26] hover:bg-gray-300 dark:hover:bg-[#1e2230] text-gray-800 dark:text-gray-200 font-bold text-xs transition-colors"
+                >
+                  Import {currentCourse?.courseCode || 'This Course'} Only
+                </button>
+
+                <button
+                  type="button"
+                  disabled={selectedCourseIndices.length === 0}
+                  onClick={handleConfirmMultiImport}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-600/25 transition-all cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-300" />
+                  <span>
+                    Import All {selectedCourseIndices.length} Courses ({totalSelectedTopics} Units)
+                  </span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                disabled={!currentCourse || currentCourse.topics.length === 0}
+                onClick={handleConfirmSingleImport}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-md ${
+                  currentCourse && currentCourse.topics.length > 0
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-indigo-600/25 cursor-pointer'
+                    : 'bg-gray-300 dark:bg-[#1e2230] text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Generate Study Plan & Schedule</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

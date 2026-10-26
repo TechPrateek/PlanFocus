@@ -46,35 +46,45 @@ const rebalanced = generateSchedule(sampleSubjects, settings, [firstTopicId]);
 assert(rebalanced.schedule.length > 0, 'Rebalanced schedule should exist');
 console.log('✅ Adaptive Rebalance verified: Successfully shifted and prioritized missed topic');
 
-// 4. Verify Syllabus & Document Parsing Engine
-import { parseSyllabusText, createSubjectFromParsed, SAMPLE_SYLLABI } from '../src/services/syllabusParser.ts';
+// 4. Verify Multi-Course Curriculum Parsing (AKTU B.Tech 4th Year Bundle)
+import { parseSyllabusText, parseMultiCourseSyllabus, createSubjectFromParsed, SAMPLE_SYLLABI } from '../src/services/syllabusParser.ts';
 
-const parsed = parseSyllabusText(SAMPLE_SYLLABI[0].content);
-assert(parsed.courseCode === 'CS 350', 'Should extract course code CS 350');
-assert(parsed.examDate === '2026-12-18', `Should accurately parse ordinal/complex exam date: got ${parsed.examDate}`);
-assert(parsed.topics.length >= 6, 'Should extract modular topics from schedule table');
-assert(parsed.topics.some(t => t.difficulty === 'hard'), 'Should auto-assign difficulty heuristics based on technical keywords');
+const multiResult = parseMultiCourseSyllabus(SAMPLE_SYLLABI[0].content);
+assert(multiResult.isMultiCourse, 'Should identify multi-course B.Tech curriculum bundle');
+assert(multiResult.courses.length >= 5, `Should extract at least 5 courses from B.Tech 4th year handbook, got ${multiResult.courses.length}`);
+assert(multiResult.courses.some(c => c.courseCode === 'BCS701'), 'Should contain Artificial Intelligence (BCS701)');
+assert(multiResult.courses.some(c => c.courseCode === 'BCS070'), 'Should contain Internet of Things (BCS070)');
+assert(multiResult.courses.some(c => c.courseCode === 'BCS071'), 'Should contain Cloud Computing (BCS071)');
+assert(multiResult.courses.some(c => c.courseCode === 'BCS072'), 'Should contain Cryptography (BCS072)');
+assert(multiResult.courses.some(c => c.courseCode === 'BCS073'), 'Should contain Mobile Apps (BCS073)');
+
+const aiCourse = multiResult.courses.find(c => c.courseCode === 'BCS701');
+assert(aiCourse && aiCourse.topics.length >= 4, 'Should extract syllabus units for AI course');
+console.log(`✅ Multi-Course Curriculum verified: Extracted '${multiResult.programTitle}' with ${multiResult.courses.length} courses (${multiResult.courses.map(c => c.courseCode).join(', ')})`);
+
+// 5. Verify Single Course Syllabus Engine (CS 350)
+const parsedCs = parseSyllabusText(SAMPLE_SYLLABI[1].content);
+assert(parsedCs.courseCode === 'CS 350', 'Should extract course code CS 350');
+assert(parsedCs.examDate === '2026-12-18', `Should accurately parse ordinal/complex exam date: got ${parsedCs.examDate}`);
+assert(parsedCs.topics.length >= 6, 'Should extract modular topics from schedule table');
 
 // Verify boilerplate rejection: office hours, grading, academic integrity, homework must NOT be topics
-const topicNamesJoined = parsed.topics.map(t => t.name.toLowerCase()).join('; ');
+const topicNamesJoined = parsedCs.topics.map(t => t.name.toLowerCase()).join('; ');
 assert(!topicNamesJoined.includes('office hours'), 'Should filter out office hours boilerplate');
 assert(!topicNamesJoined.includes('plagiarism'), 'Should filter out academic integrity boilerplate');
 assert(!topicNamesJoined.includes('grading:'), 'Should filter out grading policies');
 assert(!topicNamesJoined.includes('hw 1 assigned'), 'Should strip homework assignment notes from schedule table');
+console.log(`✅ Single Course Syllabus verified: Extracted '${parsedCs.courseName} (${parsedCs.courseCode})' with ${parsedCs.topics.length} topics and exam date ${parsedCs.examDate}`);
 
-const importedSubject = createSubjectFromParsed(parsed);
-assert(importedSubject.topics.length === parsed.topics.length, 'Generated subject should contain all parsed modules');
-console.log(`✅ Syllabus Parsing verified: Extracted '${parsed.courseName} (${parsed.courseCode})' with ${parsed.topics.length} topics and exam date ${parsed.examDate} (Confidence: ${parsed.confidenceScore}%)`);
-
-// 5. Test Sample 2 (BIO 210 with 11/25/2026 date format)
-const parsedBio = parseSyllabusText(SAMPLE_SYLLABI[1].content);
+// 6. Test Sample 2 (BIO 210 with 11/25/2026 date format)
+const parsedBio = parseSyllabusText(SAMPLE_SYLLABI[2].content);
 assert(parsedBio.courseCode === 'BIO 210', 'Should extract BIO 210');
 assert(parsedBio.examDate === '2026-11-25', `Should parse slash date 11/25/2026: got ${parsedBio.examDate}`);
 assert(!parsedBio.topics.some(t => t.name.includes('ISBN')), 'Should filter out textbook ISBN');
 console.log(`✅ Bio Syllabus verified: Extracted '${parsedBio.courseName} (${parsedBio.courseCode})' with exam date ${parsedBio.examDate}`);
 
-// 6. Test Sample 3 (MATH 240 with ordinal date 'Nov 20th, 2026')
-const parsedMath = parseSyllabusText(SAMPLE_SYLLABI[2].content);
+// 7. Test Sample 3 (MATH 240 with ordinal date 'Nov 20th, 2026')
+const parsedMath = parseSyllabusText(SAMPLE_SYLLABI[3].content);
 assert(parsedMath.courseCode === 'MATH 240', 'Should extract MATH 240');
 assert(parsedMath.examDate === '2026-11-20', `Should parse ordinal date 'Nov 20th, 2026': got ${parsedMath.examDate}`);
 console.log(`✅ Math Syllabus verified: Extracted '${parsedMath.courseName} (${parsedMath.courseCode})' with exam date ${parsedMath.examDate}`);

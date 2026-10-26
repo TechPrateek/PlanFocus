@@ -321,6 +321,25 @@ export const App: React.FC = () => {
     });
   };
 
+  const handleImportMultipleSubjects = (newSubjects: Subject[]) => {
+    setState((prev) => {
+      const existingCodes = new Set(prev.subjects.map((s) => (s.code || '').toUpperCase()));
+      const toAdd = newSubjects.filter((s) => !existingCodes.has((s.code || '').toUpperCase()));
+      const updatedSubjects = [...prev.subjects, ...(toAdd.length > 0 ? toAdd : newSubjects)];
+      refreshSchedule(updatedSubjects, prev.settings, missedTopicIds);
+      return {
+        ...prev,
+        subjects: updatedSubjects,
+      };
+    });
+    confetti({
+      particleCount: 120,
+      spread: 80,
+      origin: { y: 0.6 },
+      colors: ['#6366f1', '#10b981', '#f59e0b', '#ec4899'],
+    });
+  };
+
   const handleUpdateDailyHours = (newHours: number) => {
     const updatedSettings = {
       ...state.settings,
@@ -608,6 +627,7 @@ export const App: React.FC = () => {
         isOpen={isSyllabusModalOpen}
         onClose={() => setIsSyllabusModalOpen(false)}
         onImportSubject={handleImportSubject}
+        onImportMultipleSubjects={handleImportMultipleSubjects}
         isDarkMode={isDarkMode}
         geminiApiKey={state.settings.geminiApiKey}
       />
