@@ -588,6 +588,7 @@ export const App: React.FC = () => {
         onClose={() => setIsSyllabusModalOpen(false)}
         onImportSubject={handleImportSubject}
         isDarkMode={isDarkMode}
+        geminiApiKey={state.settings.geminiApiKey}
       />
 
       <SetupWizard

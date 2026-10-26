@@ -50,11 +50,33 @@ console.log('✅ Adaptive Rebalance verified: Successfully shifted and prioritiz
 import { parseSyllabusText, createSubjectFromParsed, SAMPLE_SYLLABI } from '../src/services/syllabusParser.ts';
 
 const parsed = parseSyllabusText(SAMPLE_SYLLABI[0].content);
-assert(parsed.courseName.includes('Distributed Systems') || parsed.courseCode === 'CS 350', 'Should extract course code and title');
-assert(parsed.topics.length >= 4, 'Should extract modular topics from syllabus text');
+assert(parsed.courseCode === 'CS 350', 'Should extract course code CS 350');
+assert(parsed.examDate === '2026-12-18', `Should accurately parse ordinal/complex exam date: got ${parsed.examDate}`);
+assert(parsed.topics.length >= 6, 'Should extract modular topics from schedule table');
 assert(parsed.topics.some(t => t.difficulty === 'hard'), 'Should auto-assign difficulty heuristics based on technical keywords');
+
+// Verify boilerplate rejection: office hours, grading, academic integrity, homework must NOT be topics
+const topicNamesJoined = parsed.topics.map(t => t.name.toLowerCase()).join('; ');
+assert(!topicNamesJoined.includes('office hours'), 'Should filter out office hours boilerplate');
+assert(!topicNamesJoined.includes('plagiarism'), 'Should filter out academic integrity boilerplate');
+assert(!topicNamesJoined.includes('grading:'), 'Should filter out grading policies');
+assert(!topicNamesJoined.includes('hw 1 assigned'), 'Should strip homework assignment notes from schedule table');
+
 const importedSubject = createSubjectFromParsed(parsed);
 assert(importedSubject.topics.length === parsed.topics.length, 'Generated subject should contain all parsed modules');
-console.log(`✅ Syllabus Parsing verified: Extracted '${parsed.courseName} (${parsed.courseCode})' with ${parsed.topics.length} topics and exam date ${parsed.examDate}`);
+console.log(`✅ Syllabus Parsing verified: Extracted '${parsed.courseName} (${parsed.courseCode})' with ${parsed.topics.length} topics and exam date ${parsed.examDate} (Confidence: ${parsed.confidenceScore}%)`);
+
+// 5. Test Sample 2 (BIO 210 with 11/25/2026 date format)
+const parsedBio = parseSyllabusText(SAMPLE_SYLLABI[1].content);
+assert(parsedBio.courseCode === 'BIO 210', 'Should extract BIO 210');
+assert(parsedBio.examDate === '2026-11-25', `Should parse slash date 11/25/2026: got ${parsedBio.examDate}`);
+assert(!parsedBio.topics.some(t => t.name.includes('ISBN')), 'Should filter out textbook ISBN');
+console.log(`✅ Bio Syllabus verified: Extracted '${parsedBio.courseName} (${parsedBio.courseCode})' with exam date ${parsedBio.examDate}`);
+
+// 6. Test Sample 3 (MATH 240 with ordinal date 'Nov 20th, 2026')
+const parsedMath = parseSyllabusText(SAMPLE_SYLLABI[2].content);
+assert(parsedMath.courseCode === 'MATH 240', 'Should extract MATH 240');
+assert(parsedMath.examDate === '2026-11-20', `Should parse ordinal date 'Nov 20th, 2026': got ${parsedMath.examDate}`);
+console.log(`✅ Math Syllabus verified: Extracted '${parsedMath.courseName} (${parsedMath.courseCode})' with exam date ${parsedMath.examDate}`);
 
 console.log('\n🎉 ALL MECHANICAL VERIFICATIONS PASSED CLEANLY!');
