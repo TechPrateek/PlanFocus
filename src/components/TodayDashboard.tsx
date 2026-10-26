@@ -127,9 +127,9 @@ export const TodayDashboard: React.FC<TodayDashboardProps> = ({
                   : 'border-slate-200 bg-white hover:border-slate-400 shadow-sm'
               }`}
             >
-              <Folder className={`w-5 h-5 mb-2 transition-transform group-hover:scale-110 ${isDarkMode ? 'text-[#abf5c0]' : 'text-emerald-600'}`} />
-              <h4 className={`text-xs font-bold ${textHeading}`}>Demo Plan</h4>
-              <p className={`text-[10px] mt-0.5 font-mono ${textMuted}`}>Preload CS & Chem</p>
+              <RotateCcw className={`w-5 h-5 mb-2 transition-transform group-hover:-rotate-45 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
+              <h4 className={`text-xs font-bold ${textHeading}`}>Reset Demo Data</h4>
+              <p className={`text-[10px] mt-0.5 font-mono ${textMuted}`}>Reload clean sample plan</p>
             </button>
           </div>
         </div>

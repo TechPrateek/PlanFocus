@@ -4,12 +4,12 @@ import {
   Calendar,
   CheckSquare,
   BookOpen,
-  Folder,
   Sparkles,
   Plus,
   UploadCloud,
   BarChart3,
   Layers,
+  RotateCcw,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -235,8 +235,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              <Folder className={`w-4 h-4 ${isDarkMode ? 'text-[#abf5c0]' : 'text-emerald-600'}`} />
-              <span>Preload Demo Data</span>
+              <RotateCcw className={`w-4 h-4 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
+              <span>Reset Demo Data</span>
             </button>
           </nav>
         </div>

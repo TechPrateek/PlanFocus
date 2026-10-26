@@ -1,11 +1,12 @@
 import React from 'react';
-import { FileText, Sun, Moon, Zap } from 'lucide-react';
+import { FileText, Sun, Moon, RotateCcw, Trash2 } from 'lucide-react';
 
 interface TopNavProps {
   onLoadSample: () => void;
   onOpenSyllabusModal: () => void;
   isDarkMode: boolean;
   onToggleTheme: () => void;
+  onResetAll?: () => void;
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
@@ -13,6 +14,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   onOpenSyllabusModal,
   isDarkMode,
   onToggleTheme,
+  onResetAll,
 }) => {
   const now = new Date();
   const dateFormatted = now.toLocaleDateString('en-US', {
@@ -61,19 +63,37 @@ export const TopNav: React.FC<TopNavProps> = ({
 
         {/* Action Buttons (PayRevive Style) */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Quick Demo Preload Pill */}
+          {/* Reset Demo Data Button */}
           <button
+            type="button"
             onClick={onLoadSample}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded text-xs font-mono font-medium border transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-2 rounded text-xs font-mono font-medium border transition-all cursor-pointer ${
               isDarkMode
-                ? 'border-[rgba(217,234,224,0.15)] bg-[#171c1b] text-[#e5eee8] hover:border-[#abf5c0]/50'
+                ? 'border-[rgba(217,234,224,0.15)] bg-[#171c1b] text-[#e5eee8] hover:border-[#abf5c0]/50 hover:bg-white/[0.04]'
                 : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 shadow-sm'
             }`}
-            title="Preload sample college courses (CS, Chemistry, Math)"
+            title="Reset and reload clean sample college courses (CS, Chemistry, Math)"
           >
-            <Zap className={`w-3.5 h-3.5 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
-            <span>Demo Plan</span>
+            <RotateCcw className={`w-3.5 h-3.5 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
+            <span>Reset Demo Data</span>
           </button>
+
+          {/* Optional Clear All Button if user wants blank slate */}
+          {onResetAll && (
+            <button
+              type="button"
+              onClick={onResetAll}
+              className={`flex items-center gap-1 px-2.5 py-2 rounded text-xs font-mono border transition-all cursor-pointer ${
+                isDarkMode
+                  ? 'border-transparent text-[#82918c] hover:text-rose-400 hover:bg-white/[0.04]'
+                  : 'border-transparent text-slate-400 hover:text-rose-600 hover:bg-slate-100'
+              }`}
+              title="Clear all courses and start empty"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Clear</span>
+            </button>
+          )}
 
           {/* Primary Action Button: Ingest Syllabus (PayRevive Mint Signature Button) */}
           <button

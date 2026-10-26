@@ -398,6 +398,7 @@ export const App: React.FC = () => {
             onOpenSyllabusModal={() => setIsSyllabusModalOpen(true)}
             isDarkMode={isDarkMode}
             onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+            onResetAll={handleResetAll}
           />
 
           {/* Adaptive Rebalance Notification Banner */}
