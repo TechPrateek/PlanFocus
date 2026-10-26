@@ -13,8 +13,8 @@ import {
 } from 'lucide-react';
 
 interface SidebarProps {
-  activeTab: 'today' | 'planly' | 'schedule' | 'tasks' | 'courses' | 'materials';
-  setActiveTab: (tab: 'today' | 'planly' | 'schedule' | 'tasks' | 'courses' | 'materials') => void;
+  activeTab: 'today' | 'schedule' | 'tasks' | 'courses' | 'materials';
+  setActiveTab: (tab: 'today' | 'schedule' | 'tasks' | 'courses' | 'materials') => void;
   pendingTasksCount: number;
   coursesCount: number;
   isDarkMode: boolean;
@@ -137,28 +137,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }`}
               >
                 PDF/TXT
-              </span>
-            </button>
-
-            {/* Planly TUF Roadmap */}
-            <button
-              onClick={() => setActiveTab('planly')}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs transition-all ${getNavItemClass(
-                'planly'
-              )}`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Sparkles className="w-4 h-4 flex-shrink-0" />
-                <span className="font-semibold tracking-tight">Planly Roadmap</span>
-              </div>
-              <span
-                className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold ${
-                  isDarkMode
-                    ? 'bg-[#171c1b] text-[#abf5c0] border border-[#abf5c0]/30'
-                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                }`}
-              >
-                TUF
               </span>
             </button>
 

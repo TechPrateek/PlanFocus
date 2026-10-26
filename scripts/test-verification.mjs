@@ -46,28 +46,7 @@ const rebalanced = generateSchedule(sampleSubjects, settings, [firstTopicId]);
 assert(rebalanced.schedule.length > 0, 'Rebalanced schedule should exist');
 console.log('✅ Adaptive Rebalance verified: Successfully shifted and prioritized missed topic');
 
-// 4. Verify takeUforward Planly DSA Roadmap & Striver Steps
-import { getPlanlyDSARoadmap } from '../src/services/sampleData.ts';
-import { getTufyGuidance } from '../src/services/tufyData.ts';
-
-const planlySubjects = getPlanlyDSARoadmap(45);
-assert(planlySubjects.length === 2, 'Planly roadmap should include DSA and CS Core subjects');
-const dsaSubj = planlySubjects.find(s => s.code === 'TUF-SDE');
-assert(dsaSubj, 'Planly should have TUF-SDE sheet');
-assert(dsaSubj.topics.length >= 15, 'TUF-SDE sheet should have rich problem set');
-
-// Verify steps exist
-const steps = new Set(dsaSubj.topics.map(t => t.step));
-assert(steps.has(1) && steps.has(2) && steps.has(3) && steps.has(7), 'Should cover Striver steps 1-7 in DSA');
-console.log(`✅ takeUforward Planly Roadmap verified: ${dsaSubj.topics.length} Striver problems across ${steps.size} core steps`);
-
-// Verify TUFY AI guidance engine
-const kadaneGuidance = getTufyGuidance("Kadane's Algorithm & Maximum Subarray Sum");
-assert(kadaneGuidance.optimal.timeComplexity.includes('O(N)'), 'Kadane optimal time should be O(N)');
-assert(kadaneGuidance.takeuforwardUrl.includes('takeuforward.org'), 'Should point to takeUforward tutorial');
-console.log('✅ TUFY AI Guidance verified: Intuition, Brute-Force, Optimal, and Invariant returned cleanly');
-
-// 5. Verify Syllabus & Document Parsing Engine
+// 4. Verify Syllabus & Document Parsing Engine
 import { parseSyllabusText, createSubjectFromParsed, SAMPLE_SYLLABI } from '../src/services/syllabusParser.ts';
 
 const parsed = parseSyllabusText(SAMPLE_SYLLABI[0].content);
