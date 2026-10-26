@@ -176,8 +176,9 @@ export const FocusSessionCard: React.FC<FocusSessionCardProps> = ({
       {/* Controls: Reset, Big Action Button, Skip */}
       <div className="flex items-center justify-between gap-2.5 pt-2">
         <button
+          type="button"
           onClick={resetTimer}
-          className={`p-2.5 rounded-lg border transition-colors ${
+          className={`p-2.5 rounded-lg border transition-colors cursor-pointer ${
             isDarkMode
               ? 'border-[rgba(217,234,224,0.12)] bg-[#171c1b] text-[#82918c] hover:text-white'
               : 'border-slate-200 bg-slate-100 text-slate-600 hover:text-slate-900'
@@ -188,8 +189,9 @@ export const FocusSessionCard: React.FC<FocusSessionCardProps> = ({
         </button>
 
         <button
+          type="button"
           onClick={togglePlay}
-          className={`flex-1 py-2.5 px-4 rounded-lg font-bold text-xs font-mono flex items-center justify-center gap-2 shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 ${
+          className={`flex-1 py-2.5 px-4 rounded-lg font-bold text-xs font-mono flex items-center justify-center gap-2 shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer ${
             isDarkMode
               ? 'bg-[#abf5c0] hover:bg-[#cdfad8] text-[#0b0d0d] shadow-[0_6px_25px_rgba(171,245,192,0.2)]'
               : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
@@ -209,8 +211,9 @@ export const FocusSessionCard: React.FC<FocusSessionCardProps> = ({
         </button>
 
         <button
+          type="button"
           onClick={skipTimer}
-          className={`p-2.5 rounded-lg border transition-colors ${
+          className={`p-2.5 rounded-lg border transition-colors cursor-pointer ${
             isDarkMode
               ? 'border-[rgba(217,234,224,0.12)] bg-[#171c1b] text-[#82918c] hover:text-white'
               : 'border-slate-200 bg-slate-100 text-slate-600 hover:text-slate-900'

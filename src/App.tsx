@@ -20,6 +20,7 @@ import { RebalanceBanner } from './components/RebalanceBanner';
 import { ConflictModal } from './components/ConflictModal';
 import { StudyTipModal } from './components/StudyTipModal';
 import { SyllabusImportModal } from './components/SyllabusImportModal';
+import { FocusTimerModal } from './components/FocusTimer';
 import { getTodayDateString } from './utils/dateUtils';
 import confetti from 'canvas-confetti';
 
@@ -48,6 +49,7 @@ export const App: React.FC = () => {
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState<boolean>(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [activeFocusTask, setActiveFocusTask] = useState<ScheduledTask | null>(null);
+  const [isFocusModalOpen, setIsFocusModalOpen] = useState<boolean>(false);
   const [studyTipTask, setStudyTipTask] = useState<ScheduledTask | null>(null);
   const [isStudyTipOpen, setIsStudyTipOpen] = useState<boolean>(false);
 
@@ -167,6 +169,7 @@ export const App: React.FC = () => {
 
   const handleStartFocus = (task: ScheduledTask) => {
     setActiveFocusTask(task);
+    setIsFocusModalOpen(true);
   };
 
   const handleSimulateMissed = (task: ScheduledTask) => {
@@ -583,6 +586,24 @@ export const App: React.FC = () => {
       </div>
 
       {/* Modals */}
+      <FocusTimerModal
+        isOpen={isFocusModalOpen}
+        onClose={() => setIsFocusModalOpen(false)}
+        activeTask={activeFocusTask}
+        soundEnabled={state.settings.soundEnabled}
+        onToggleSound={() =>
+          setState((prev) => ({
+            ...prev,
+            settings: {
+              ...prev.settings,
+              soundEnabled: !prev.settings.soundEnabled,
+            },
+          }))
+        }
+        onLogCompletedSession={handleLogCompletedSession}
+        isDarkMode={isDarkMode}
+      />
+
       <SyllabusImportModal
         isOpen={isSyllabusModalOpen}
         onClose={() => setIsSyllabusModalOpen(false)}

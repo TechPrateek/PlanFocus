@@ -541,8 +541,12 @@ export const TodayDashboard: React.FC<TodayDashboardProps> = ({
 
                     {!isDone && (
                       <button
-                        onClick={() => onStartFocus(task)}
-                        className={`px-3 py-1.5 rounded text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-sm ${
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onStartFocus(task);
+                        }}
+                        className={`px-3 py-1.5 rounded text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer ${
                           isDarkMode
                             ? 'bg-[#abf5c0] hover:bg-[#cdfad8] text-[#0b0d0d]'
                             : 'bg-emerald-600 hover:bg-emerald-700 text-white'

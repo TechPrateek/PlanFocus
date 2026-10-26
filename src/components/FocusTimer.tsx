@@ -1,31 +1,58 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ScheduledTask } from '../types';
-import { Play, Pause, RotateCcw, SkipForward, CheckCircle2, Volume2, VolumeX } from 'lucide-react';
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  SkipForward,
+  CheckCircle2,
+  Volume2,
+  VolumeX,
+  X,
+  Sparkles,
+} from 'lucide-react';
 import { audioService } from '../services/audioService';
 import confetti from 'canvas-confetti';
 
-interface FocusTimerProps {
+interface FocusTimerModalProps {
+  isOpen: boolean;
+  onClose: () => void;
   activeTask: ScheduledTask | null;
   soundEnabled: boolean;
   onToggleSound: () => void;
   onLogCompletedSession: (task: ScheduledTask, durationMinutes: number) => void;
-  onTimerStateChange: (isRunning: boolean, minutesRemaining: number) => void;
+  onTimerStateChange?: (isRunning: boolean, minutesRemaining: number) => void;
+  isDarkMode?: boolean;
 }
 
-export const FocusTimer: React.FC<FocusTimerProps> = ({
+export const FocusTimerModal: React.FC<FocusTimerModalProps> = ({
+  isOpen,
+  onClose,
   activeTask,
   soundEnabled,
   onToggleSound,
   onLogCompletedSession,
   onTimerStateChange,
+  isDarkMode = false,
 }) => {
   const [mode, setMode] = useState<'work' | 'shortBreak' | 'longBreak'>('work');
   const [durationMinutes, setDurationMinutes] = useState<number>(25);
   const [secondsRemaining, setSecondsRemaining] = useState<number>(25 * 60);
-  const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [isRunning, setIsRunning] = useState<boolean>(true); // Auto-start on modal open
   const [sessionCompletedNotice, setSessionCompletedNotice] = useState<boolean>(false);
 
   const timerRef = useRef<any>(null);
+
+  // Auto-start and chime when modal opens with an active task
+  useEffect(() => {
+    if (isOpen) {
+      setIsRunning(true);
+      setSessionCompletedNotice(false);
+      if (soundEnabled) {
+        audioService.playStartChime();
+      }
+    }
+  }, [isOpen, activeTask, soundEnabled]);
 
   // Switch modes
   const handleModeChange = (newMode: 'work' | 'shortBreak' | 'longBreak') => {
@@ -41,7 +68,7 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
 
   // Timer tick effect
   useEffect(() => {
-    if (isRunning) {
+    if (isRunning && isOpen) {
       timerRef.current = setInterval(() => {
         setSecondsRemaining((prev) => {
           if (prev <= 1) {
@@ -60,11 +87,13 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isRunning]);
+  }, [isRunning, isOpen]);
 
-  // Sync state upward to Header
+  // Sync state upward if provided
   useEffect(() => {
-    onTimerStateChange(isRunning, Math.ceil(secondsRemaining / 60));
+    if (onTimerStateChange) {
+      onTimerStateChange(isRunning, Math.ceil(secondsRemaining / 60));
+    }
   }, [isRunning, secondsRemaining, onTimerStateChange]);
 
   const handleSessionEnd = () => {
@@ -72,13 +101,12 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
     if (soundEnabled) {
       audioService.playSessionCompleteChime();
     }
-    // Celebratory confetti if it was a work session
     if (mode === 'work') {
       confetti({
-        particleCount: 80,
-        spread: 60,
-        origin: { y: 0.7 },
-        colors: ['#6366f1', '#10b981', '#f59e0b'],
+        particleCount: 90,
+        spread: 65,
+        origin: { y: 0.65 },
+        colors: ['#6366f1', '#10b981', '#f59e0b', '#ec4899'],
       });
     }
   };
@@ -100,8 +128,11 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
     if (activeTask) {
       onLogCompletedSession(activeTask, durationMinutes);
       resetTimer();
+      onClose();
     }
   };
+
+  if (!isOpen) return null;
 
   const totalSeconds = durationMinutes * 60;
   const progressFraction = Math.max(0, Math.min(1, 1 - secondsRemaining / totalSeconds));
@@ -111,94 +142,117 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
   const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
   // SVG circular dimensions
-  const radius = 120;
+  const radius = 105;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - progressFraction * circumference;
 
   return (
-    <div className="max-w-xl mx-auto py-6">
-      <div className="bg-[#12151e] border border-[#1e2230] rounded-2xl p-6 sm:p-8 text-center shadow-xl relative overflow-hidden">
-        {/* Active Task Banner */}
-        <div className="mb-6 p-3 rounded-xl bg-[#171b26] border border-[#1e2230] flex items-center justify-between">
-          <div className="text-left min-w-0">
-            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block">
-              Active Focus Target
-            </span>
-            <h3 className="text-sm font-bold text-white truncate">
-              {activeTask ? activeTask.topicName : 'General Focus Session'}
-            </h3>
-            {activeTask && (
-              <span className="text-[11px] text-indigo-400">
-                {activeTask.subjectName} ({activeTask.difficulty})
-              </span>
-            )}
-          </div>
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in font-sans">
+      <div className="relative w-full max-w-lg bg-white dark:bg-[#12151e] border border-gray-200 dark:border-indigo-500/30 rounded-3xl p-6 sm:p-8 text-center shadow-2xl overflow-hidden transition-colors">
+        {/* Top Controls: Sound Toggle and Close Button */}
+        <div className="flex items-center justify-between mb-4">
           <button
             onClick={onToggleSound}
-            className="p-2 rounded-lg bg-[#12151e] text-gray-400 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-[#171b26] border border-gray-200 dark:border-[#1e2230] text-gray-700 dark:text-gray-300 text-xs font-semibold hover:border-indigo-500 transition-colors"
             title={soundEnabled ? 'Web Audio chime enabled' : 'Muted'}
           >
             {soundEnabled ? (
-              <Volume2 className="w-4 h-4 text-indigo-400" />
+              <>
+                <Volume2 className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Audio Chimes On</span>
+              </>
             ) : (
-              <VolumeX className="w-4 h-4 text-gray-500" />
+              <>
+                <VolumeX className="w-3.5 h-3.5 text-gray-400" />
+                <span>Muted</span>
+              </>
             )}
           </button>
+
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+            title="Minimize or Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Active Task Banner */}
+        <div className="mb-6 p-4 rounded-2xl bg-gray-50 dark:bg-[#171b26] border border-gray-200 dark:border-[#1e2230] text-left">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Focus Target
+            </span>
+            {activeTask && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-bold uppercase tracking-wide">
+                {activeTask.difficulty}
+              </span>
+            )}
+          </div>
+          <h3 className="text-base font-extrabold text-gray-900 dark:text-white truncate">
+            {activeTask ? activeTask.topicName : 'General Focus Session'}
+          </h3>
+          {activeTask && (
+            <p className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold mt-0.5">
+              {activeTask.subjectName} &bull; {activeTask.durationHours}h Block
+            </p>
+          )}
         </div>
 
         {/* Mode Selector Tabs */}
-        <div className="inline-flex p-1 bg-[#171b26] rounded-xl border border-[#1e2230] mb-8">
+        <div className="flex items-center justify-center gap-2 mb-6 p-1 bg-gray-100 dark:bg-[#171b26] border border-gray-200 dark:border-[#1e2230] rounded-2xl w-fit mx-auto">
           <button
             onClick={() => handleModeChange('work')}
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               mode === 'work'
                 ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
-            Focus (25m)
+            Work (25m)
           </button>
           <button
             onClick={() => handleModeChange('shortBreak')}
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               mode === 'shortBreak'
                 ? 'bg-emerald-600 text-white shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
-            Short Break (5m)
+            Break (5m)
           </button>
           <button
             onClick={() => handleModeChange('longBreak')}
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               mode === 'longBreak'
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-amber-600 text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
-            Long Break (15m)
+            Rest (15m)
           </button>
         </div>
 
-        {/* Circular Progress Clock */}
-        <div className="relative w-72 h-72 mx-auto flex items-center justify-center mb-8">
+        {/* SVG Circular Progress Timer */}
+        <div className="relative w-64 h-64 mx-auto my-2 flex items-center justify-center">
           <svg className="w-full h-full transform -rotate-90">
-            {/* Background Track */}
+            {/* Background ring */}
             <circle
-              cx="144"
-              cy="144"
+              cx="128"
+              cy="128"
               r={radius}
-              stroke="#1e2230"
+              stroke={isDarkMode ? '#1e2230' : '#e2e8f0'}
               strokeWidth="8"
               fill="transparent"
             />
-            {/* Active Progress */}
+            {/* Animated progress ring */}
             <circle
-              cx="144"
-              cy="144"
+              cx="128"
+              cy="128"
               r={radius}
-              stroke={mode === 'work' ? '#6366f1' : '#10b981'}
+              stroke={mode === 'work' ? '#6366f1' : mode === 'shortBreak' ? '#10b981' : '#f59e0b'}
               strokeWidth="8"
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
@@ -210,38 +264,39 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
 
           {/* Centered Digits */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-5xl font-extrabold font-mono text-white tracking-tight">
+            <span className="text-5xl font-black font-mono text-gray-900 dark:text-white tracking-tight">
               {formattedTime}
             </span>
-            <span className="text-xs uppercase font-medium tracking-wider text-gray-400 mt-2">
-              {mode === 'work' ? 'Deep Focus' : 'Recharge & Rest'}
+            <span className="text-[11px] uppercase font-bold tracking-wider text-gray-400 mt-2 flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-amber-400" />
+              {isRunning ? (mode === 'work' ? 'Deep Work Running' : 'Resting') : 'Paused'}
             </span>
           </div>
         </div>
 
         {/* Session Finished Notification Banner */}
         {sessionCompletedNotice && (
-          <div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between animate-fade-in">
+          <div className="my-4 p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs flex items-center justify-between animate-fade-in">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              <span>Great job! You finished a focus block.</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+              <span className="font-semibold">Focus block completed!</span>
             </div>
             {activeTask && (
               <button
                 onClick={handleLogAndComplete}
-                className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-sm transition-colors"
+                className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-sm transition-colors text-xs"
               >
-                Log to Topic
+                Log Session
               </button>
             )}
           </div>
         )}
 
         {/* Primary Controls */}
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-4 mt-6">
           <button
             onClick={resetTimer}
-            className="p-3 rounded-xl bg-[#171b26] border border-[#1e2230] text-gray-400 hover:text-white hover:bg-[#1e2230] transition-colors"
+            className="p-3.5 rounded-2xl bg-gray-100 dark:bg-[#171b26] border border-gray-200 dark:border-[#1e2230] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             title="Reset"
           >
             <RotateCcw className="w-5 h-5" />
@@ -249,37 +304,43 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
 
           <button
             onClick={togglePlay}
-            className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform hover:scale-105 ${
+            className={`px-8 py-3.5 rounded-2xl flex items-center justify-center gap-2.5 text-white font-bold text-sm shadow-xl transition-all transform hover:scale-105 active:scale-95 ${
               isRunning
                 ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/30'
                 : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/30'
             }`}
           >
             {isRunning ? (
-              <Pause className="w-7 h-7 fill-current" />
+              <>
+                <Pause className="w-5 h-5 fill-current" />
+                <span>Pause</span>
+              </>
             ) : (
-              <Play className="w-7 h-7 fill-current ml-0.5" />
+              <>
+                <Play className="w-5 h-5 fill-current ml-0.5" />
+                <span>Resume Focus</span>
+              </>
             )}
           </button>
 
           <button
             onClick={handleSessionEnd}
-            className="p-3 rounded-xl bg-[#171b26] border border-[#1e2230] text-gray-400 hover:text-white hover:bg-[#1e2230] transition-colors"
-            title="Complete Session Now (Demo / Skip)"
+            className="p-3.5 rounded-2xl bg-gray-100 dark:bg-[#171b26] border border-gray-200 dark:border-[#1e2230] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+            title="Skip / Finish Block"
           >
             <SkipForward className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Quick Log Button if Task is Active */}
+        {/* Complete Topic & Close */}
         {activeTask && (
-          <div className="mt-8 pt-4 border-t border-[#1e2230]/70 flex items-center justify-between text-xs text-gray-400">
-            <span>Mark task complete & update roadmap</span>
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-[#1e2230] flex items-center justify-between text-xs text-gray-400">
+            <span>Finished this assignment?</span>
             <button
               onClick={handleLogAndComplete}
-              className="px-3 py-1.5 rounded-lg bg-[#171b26] hover:bg-indigo-600/20 hover:border-indigo-500/40 border border-[#1e2230] text-indigo-300 font-semibold transition-all"
+              className="px-3.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-600 text-indigo-600 dark:text-indigo-300 hover:text-white border border-indigo-200 dark:border-indigo-800/40 font-bold transition-all"
             >
-              Complete Topic Now
+              Mark Topic Done
             </button>
           </div>
         )}

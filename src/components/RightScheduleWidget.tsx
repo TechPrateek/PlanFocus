@@ -139,8 +139,12 @@ export const RightScheduleWidget: React.FC<RightScheduleWidgetProps> = ({
                     </div>
 
                     <button
-                      onClick={() => onStartFocus(task)}
-                      className={`p-1.5 rounded transition-all flex-shrink-0 ${
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onStartFocus(task);
+                      }}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-bold flex items-center gap-1 transition-all flex-shrink-0 cursor-pointer shadow-xs ${
                         isDarkMode
                           ? 'bg-[#abf5c0] hover:bg-[#cdfad8] text-[#0b0d0d]'
                           : 'bg-emerald-600 hover:bg-emerald-700 text-white'
@@ -148,6 +152,7 @@ export const RightScheduleWidget: React.FC<RightScheduleWidgetProps> = ({
                       title="Focus on this"
                     >
                       <Play className="w-3 h-3 fill-current" />
+                      <span>Focus</span>
                     </button>
                   </div>
                 </div>

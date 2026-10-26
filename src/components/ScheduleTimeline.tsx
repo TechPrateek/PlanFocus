@@ -163,11 +163,16 @@ export const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
 
                           {!isDone && (
                             <button
-                              onClick={() => onStartFocus(task)}
-                              className="p-1 rounded-lg bg-indigo-50 dark:bg-indigo-600/30 hover:bg-indigo-600 text-indigo-600 dark:text-indigo-300 hover:text-white transition-colors"
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onStartFocus(task);
+                              }}
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-600/25 hover:bg-indigo-600 text-indigo-600 dark:text-indigo-300 hover:text-white transition-all shadow-xs cursor-pointer"
                               title="Start Focus Timer"
                             >
-                              <Play className="w-3 h-3 fill-current" />
+                              <Play className="w-3.5 h-3.5 fill-current" />
+                              <span className="text-[11px] font-bold">Focus</span>
                             </button>
                           )}
                         </div>
